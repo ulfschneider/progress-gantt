@@ -58,7 +58,7 @@
                     endDate: '2019-05-15',
                     overrun: true,
                     overrunDate: '2019-05-28',
-                    progress: 0.6
+                    progress: 1.0
                 },
                 {
                     label: 'D1.5',
@@ -66,7 +66,7 @@
                     endDate: '2019-05-30',
                     overrun: true,
                     overrunDate: '2019-05-31',
-                    progress: 0.2
+                    progress: 1.0
                 },
                 {
                     label: 'D2',
@@ -74,7 +74,7 @@
                     endDate: '2019-07-02',
                     overrun: true,
                     overrunDate: '2019-07-24',
-                    progress: 0.2
+                    progress: 1.0
                 },
                 {
                     label: 'D3',
@@ -82,29 +82,29 @@
                     endDate: '2019-07-14',
                     overrun: true,
                     overrunDate: '2019-07-17',
-                    progress: 0.2
+                    progress: 1.0
                 },
                 {
                     label: 'D4',
                     startDate: '2019-07-03',
                     endDate: '2019-07-30',
-                    overrun: true,                    
-                    progress: 0.2
+                    overrun: true,
+                    progress: 0.97
                 },
                 {
                     label: 'D5',
                     startDate: '2019-08-01',
                     endDate: '2019-08-30',
-                    progress: 0.2
+                    progress: 0.9
                 },
                 {
                     label: 'D6',
                     startDate: '2019-09-01',
                     endDate: '2019-09-30',
-                    progress: 0.2
+                    progress: 0.02
                 }
             ]
-            
+
         }
         var textarea = document.getElementById('config');
         textarea.value = JSON.stringify(config, null, '  ');
@@ -117,7 +117,6 @@
 
         textarea.oninput = function () {
             try {
-                console.log('on input');
                 error.innerHTML = '';
                 editConfig = JSON.parse(textarea.value);
                 gantt.draw(editConfig);

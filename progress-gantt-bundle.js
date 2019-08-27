@@ -25664,16 +25664,19 @@ function validateSettings(settings) {
         settings.style = {
             backgroundColor: '#fff',
             color: '#222',
-            overrunColor: '#bbb',
             barColor: '#bbb',
-            progressColor: '#222'
+            progressColor: '#222',
+            overrunBarColor: 'red',
+            overrunProgressColor: '#222'
+
         }
     } else {
         settings.style.backgroundColor = settings.style.backgroundColor ? settings.style.backgroundColor : '#fff';
         settings.style.color = settings.style.color ? settings.style.color : '#222';
         settings.style.barColor = settings.style.barColor ? settings.style.barColor : '#bbb';
-        settings.style.overrunColor = settings.style.overrunColor ? settings.style.overrunColor : settings.style.barColor;
         settings.style.progressColor = settings.style.progressColor ? settings.style.progressColor : settings.style.color;
+        settings.style.overrunBarColor = settings.style.overrunBarColor ? settings.style.overrunBarColor : settings.style.barColor;
+        settings.style.overrunProgressColor = settings.style.overrunProgressColor ? settings.style.overrunProgressColor : settings.style.progressColor;
     }
 
     return settings;
@@ -25714,7 +25717,8 @@ function drawAxis(settings) {
 function drawBars(settings) {
     settings.g
         .selectAll('.bar')
-        .data(settings.data).enter().append('rect')
+        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .enter().append('rect')
         .attr('class', 'bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
         .attr('width',
@@ -25729,11 +25733,30 @@ function drawBars(settings) {
             })
         .attr('y', function (d) { return settings.y(d.label) })
         .attr('height', settings.y.bandwidth())
-        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunColor : settings.style.barColor; });
+        .attr('fill', settings.style.barColor);
+
+    settings.g
+        .selectAll('.overrun-bar')
+        .data(settings.data.filter(function (d) { return d.startDate && (d.overrun || d.overrunDate); }))
+        .enter().append('rect')
+        .attr('class', 'overrun-bar')
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.endDate)) })
+        .attr('width',
+            function (d) {
+                if (d.overrunDate) {
+                    return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.endDate)));
+                } else {
+                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.endDate)));
+                }
+            })
+        .attr('y', function (d) { return settings.y(d.label) })
+        .attr('height', settings.y.bandwidth())
+        .attr('fill', settings.style.overrunBarColor);
 
     settings.g
         .selectAll('.progress-bar')
-        .data(settings.data).enter().append('rect')
+        .data(settings.data.filter(function (d) { return d.startDate && d.progress; }))
+        .enter().append('rect')
         .attr('class', 'progress-bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
         .attr('width',
@@ -25747,12 +25770,12 @@ function drawBars(settings) {
                 }
             })
         .attr('y', function (d) { return settings.y(d.label) })
-        .attr('height', settings.y.bandwidth() / 3)
-        .attr('fill', settings.style.progressColor);
+        .attr('height', settings.y.bandwidth() / 2)
+        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; });
 }
 
 function drawToday(settings) {
-    let x = settings.x(getMoment()) + 0.5;
+    let x = settings.x(getStartOfDay(getMoment())) + 0.5;
     let y1 = settings.height;
     let y2 = 0;
     settings.g.append('line')
