@@ -1,0 +1,44 @@
+{
+  "name": "progress-gantt",
+  "version": "0.1.0",
+  "description": "Draw a svg progress gantt chart",
+  "main": "progress-gantt.js",
+  "scripts": {
+    "test": "jest && browserify -r ./progress-gantt.js:progress-gantt -r autosize > ./progress-gantt-bundle.js && documentation build progress-gantt.js -f md > README.md",
+    "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"    
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ulfschneider/progress-gantt.git"
+  },
+  "jest": {
+    "verbose": true,
+    "testURL": "http://localhost/",
+    "collectCoverage": true
+  },
+  "keywords": [
+    "SVG",
+    "D3",
+    "Gantt"
+  ],
+  "author": "Ulf Schneider",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ulfschneider/progress-gantt/issues"
+  },
+  "homepage": "https://github.com/ulfschneider/progress-gantt#readme",
+  "dependencies": {
+    "d3": "^5.9.7",
+    "js-base64": "^2.5.1",
+    "underscore": "^1.9.1"
+  },
+  "devDependencies": {
+    "acorn": "^6.3.0",
+    "autosize": "^4.0.2",
+    "browserify": "^16.5.0",
+    "coveralls": "^3.0.6",
+    "documentation": "^9.1.1",
+    "fs": "0.0.1-security",
+    "jest": "^24.8.0"
+  }
+}

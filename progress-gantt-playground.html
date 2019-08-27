@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>horiz-gauge</title>
+
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+        }
+
+        a {
+            color: black;
+        }
+
+        textarea {
+            width: 100%;
+            outline: none;
+            border: none;
+            font-family: monospace;
+            font-size: 1.1em;
+            caret-color: red;
+        }
+
+        #error {
+            color: white;
+            background: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>The progress-gantt Playground</h1>
+    <p>A d3.js progress gantt chart</p>
+
+    <svg id="gantt"></svg>
+
+    <p>Change the progress-gantt settings below and see the effect above <strong>on the fly</strong>. Please <a href='#'
+            onclick='location.reload();'>reload this
+            page for a reset of all settings</a>.</p>
+    <div id="error"></div>
+    <textarea id="config" spellcheck="false" autocorrect="off" autocapitalize="off" rows="75"></textarea>
+
+    <script src="./progress-gantt-bundle.js"></script>
+    <script>
+        var progressGantt = require('progress-gantt');
+        var autosize = require('autosize');
+
+        var config = {
+            "id": "gantt"
+        }
+        var textarea = document.getElementById('config');
+        textarea.value = JSON.stringify(config, null, '  ');
+        autosize(textarea);
+
+        var error = document.getElementById('error');
+
+        var gantt = progressGantt(config);
+        gantt.draw();
+
+        textarea.oninput = function () {
+            try {
+                error.innerHTML = '';
+                editConfig = JSON.parse(textarea.value);
+                gantt.draw(editConfig);
+            } catch (e) {
+                console.log(e);
+                error.innerHTML = e;
+            }
+        }
+    </script>
+</body>
+
+</html>
