@@ -3,11 +3,20 @@
 const d3 = require('d3');
 const Base64 = require('js-base64').Base64;
 const _ = require('underscore');
+const moment = require('moment');
+
+function getStartOfDay(date) {
+    return getMoment(date).startOf('day');
+}
+
+function getMoment(date) {
+    return moment(date);
+}
 
 function validateSettings(settings) {
 
     if (!settings) {
-        throw "No settings";
+        throw 'No settings';
     }
 
     if (!settings.svg && settings.id) {
@@ -15,7 +24,11 @@ function validateSettings(settings) {
     }
 
     if (!settings.svg || settings.svg.tagName.toLowerCase() !== 'svg') {
-        throw "No svg";
+        throw 'No svg';
+    }
+
+    if (!settings.data) {
+        throw 'No data';
     }
 
     settings.d3svg = d3.select(settings.svg);
@@ -26,16 +39,32 @@ function validateSettings(settings) {
 
     if (_.isUndefined(settings.margin) || _.isEmpty(settings.margin)) {
         settings.margin = {
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0
+            left: 100,
+            top: 50,
+            right: 50,
+            bottom: 50
         }
     } else {
-        settings.margin.left = settings.margin.left ? settings.margin.left : 0;
-        settings.margin.top = settings.margin.top ? settings.margin.top : 0;
-        settings.margin.right = settings.margin.right ? settings.margin.right : 0;
-        settings.margin.bottom = settings.margin.bottom ? settings.margin.bottom : 0;
+        settings.margin.left = settings.margin.left ? settings.margin.left : 100;
+        settings.margin.top = settings.margin.top ? settings.margin.top : 50;
+        settings.margin.right = settings.margin.right ? settings.margin.right : 50;
+        settings.margin.bottom = settings.margin.bottom ? settings.margin.bottom : 50;
+    }
+
+    if (_.isUndefined(settings.style) || _.isEmpty(settings.style)) {
+        settings.style = {
+            backgroundColor: '#fff',
+            color: '#222',
+            overrunColor: '#bbb',
+            barColor: '#bbb',
+            progressColor: '#222'
+        }
+    } else {
+        settings.style.backgroundColor = settings.style.backgroundColor ? settings.style.backgroundColor : '#fff';
+        settings.style.color = settings.style.color ? settings.style.color : '#222';
+        settings.style.barColor = settings.style.barColor ? settings.style.barColor : '#bbb';
+        settings.style.overrunColor = settings.style.overrunColor ? settings.style.overrunColor : settings.style.barColor;
+        settings.style.progressColor = settings.style.progressColor ? settings.style.progressColor : settings.style.color;
     }
 
     return settings;
@@ -51,6 +80,88 @@ function removeProgressGantt(settings) {
     }
 }
 
+function prepareDataFunctions(settings) {
+
+    settings.y = d3.scaleBand().padding(0.05).range([0, settings.height]);
+    settings.y.domain(settings.data.map(function (d) { return d.label }));
+
+    settings.fromDate = d3.min(settings.data, function (d) { return getStartOfDay(d.startDate); });
+    settings.toDate = d3.max(settings.data, function (d) { return getStartOfDay(d.endDate); });
+    settings.x = d3.scaleLinear().range([0, settings.width]).domain([getStartOfDay(settings.fromDate), getStartOfDay(settings.toDate)]).nice();
+
+}
+
+function drawAxis(settings) {
+    settings.yAxis = settings.g.append('g')
+        .call(d3.axisLeft(settings.y).tickSize(0));
+
+    settings.topAxis = settings.g.append('g')
+        .call(d3.axisTop(settings.x).tickFormat(d3.timeFormat("%b %d")));
+    settings.bottomAxis = settings.g.append('g')
+        .attr('transform', 'translate(0,' + settings.height + ')')
+        .call(d3.axisBottom(settings.x).tickFormat(d3.timeFormat("%b %d")));
+}
+
+function drawBars(settings) {
+    settings.g
+        .selectAll('.bar')
+        .data(settings.data).enter().append('rect')
+        .attr('class', 'bar')
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('width',
+            function (d) {
+                if (d.overrun && !d.overrunDate) {
+                    return settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate));
+                } else if (d.overrunDate) {
+                    return settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate));
+                } else {
+                    return settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate));
+                }
+            })
+        .attr('y', function (d) { return settings.y(d.label) })
+        .attr('height', settings.y.bandwidth())
+        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunColor : settings.style.barColor; });
+
+    settings.g
+        .selectAll('.progress-bar')
+        .data(settings.data).enter().append('rect')
+        .attr('class', 'progress-bar')
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('width',
+            function (d) {
+                if (d.overrun && !d.overrunDate) {
+                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate))) * d.progress;
+                } else if (d.overrunDate) {
+                    return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate))) * d.progress;
+                } else {
+                    return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate))) * d.progress;
+                }
+            })
+        .attr('y', function (d) { return settings.y(d.label) })
+        .attr('height', settings.y.bandwidth() / 3)
+        .attr('fill', settings.style.progressColor);
+}
+
+function drawToday(settings) {
+    let x = settings.x(getMoment()) + 0.5;
+    let y1 = settings.height;
+    let y2 = 0;
+    settings.g.append('line')
+        .attr('x1', x)
+        .attr('y1', y1)
+        .attr('x2', x)
+        .attr('y2', y2)
+        .style('stroke-width', '3')
+        .style('stroke', settings.style.backgroundColor);
+
+    settings.g.append('line')
+        .attr('x1', x)
+        .attr('y1', y1)
+        .attr('x2', x)
+        .attr('y2', y2)
+        .style('stroke-width', '1')
+        .style('stroke', settings.style.color);
+}
 
 function drawProgressGantt(settings) {
     validateSettings(settings);
@@ -59,11 +170,17 @@ function drawProgressGantt(settings) {
     let d3svg = settings.d3svg;
 
     d3svg
-        .attr('width', settings.width + settings.margin.left + settings.margin.right + settings.borderWidth * 2)
-        .attr('height', settings.height + settings.margin.top + settings.margin.bottom + settings.borderWidth * 2);
+        .attr('width', settings.width + settings.margin.left + settings.margin.right)
+        .attr('height', settings.height + settings.margin.top + settings.margin.bottom);
 
     settings.g = d3svg.append('g')
         .attr('transform', 'translate(' + (settings.margin.left) + "," + (settings.margin.top) + ')');
+
+    prepareDataFunctions(settings);
+    drawBars(settings);
+    drawToday(settings);
+    drawAxis(settings);
+
 }
 
 /**
@@ -127,26 +244,27 @@ function ProgressGantt(settings) {
 }
 
 /**
- * Draw the gauge.
- * @param {Object} [settings] - The configuration object for the gauge. Optional.
+ * Draw the progress gantt.
+ * @param {Object} [settings] - The configuration object for the progress gantt. Optional.
  * If provided, will overwrite the settings object already given to the constructor.
  */
 ProgressGantt.prototype.draw = function (settings) {
     if (settings) {
         this.settings = settings;
     }
-    drawGauge(this.settings);
+
+    drawProgressGantt(this.settings);
 }
 
 /**
- * Clear the gauge.
+ * Clear the progress gantt.
  */
 ProgressGantt.prototype.remove = function () {
-    removeGauge(this.settings);
+    removeProgressGantt(this.settings);
 }
 
 /**
- * Draw the gauge and return the result as a string which can be assigned to the SRC attribute of an HTML IMG tag.
+ * Draw the progress gantt and return the result as a string which can be assigned to the SRC attribute of an HTML IMG tag.
  * @returns {string}
  */
 ProgressGantt.prototype.imageSource = function () {
@@ -156,7 +274,7 @@ ProgressGantt.prototype.imageSource = function () {
 }
 
 /**
- * Draw the gauge and return the result as a SVG tag string.
+ * Draw the progress gantt and return the result as a SVG tag string.
  * @returns {string}
  */
 ProgressGantt.prototype.svgSource = function () {

@@ -68,26 +68,26 @@ let diagram = progressGantt(settings);
 
 ### draw
 
-Draw the gauge.
+Draw the progress gantt.
 
 #### Parameters
 
--   `settings` **[Object][9]?** The configuration object for the gauge. Optional.
+-   `settings` **[Object][9]?** The configuration object for the progress gantt. Optional.
     If provided, will overwrite the settings object already given to the constructor.
 
 ### remove
 
-Clear the gauge.
+Clear the progress gantt.
 
 ### imageSource
 
-Draw the gauge and return the result as a string which can be assigned to the SRC attribute of an HTML IMG tag.
+Draw the progress gantt and return the result as a string which can be assigned to the SRC attribute of an HTML IMG tag.
 
 Returns **[string][10]** 
 
 ### svgSource
 
-Draw the gauge and return the result as a SVG tag string.
+Draw the progress gantt and return the result as a SVG tag string.
 
 Returns **[string][10]** 
 
