@@ -51,6 +51,19 @@
 
         var config = {
             id: 'gantt',
+            height: 300,
+            showTimeAxis: false,
+            callbacks: {
+                barOnClick: function (d, event) {
+                    console.log(d);
+                    console.log(event);
+                    console.log('--');
+                },
+                barOnHover: function (d, event) {
+                    console.log(d);
+                    console.log(event);
+                }
+            },
             data: [
                 {
                     label: 'D1',

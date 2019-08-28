@@ -25622,6 +25622,17 @@ function getMoment(date) {
     return moment(date);
 }
 
+function formatPercentage(percentage) {
+    let fixed = 0;
+    if (percentage > 0 && percentage < 0.01) {
+        fixed = 2;
+    } else if (percentage < 1 && percentage > 0.99) {
+        fixed = 2;
+    }
+    return (percentage ? percentage * 100 : 0).toFixed(fixed) + '%';
+}
+
+
 function validateSettings(settings) {
 
     if (!settings) {
@@ -25641,42 +25652,58 @@ function validateSettings(settings) {
     }
 
     settings.d3svg = d3.select(settings.svg);
-    settings.fontSize = settings.fontSize ? settings.fontSize : 16;
-    settings.fontFamily = settings.fontFamily ? settings.fontFamily : 'sans-serif';
     settings.width = settings.width ? settings.width : 600;
     settings.height = settings.height ? settings.height : 400;
+    settings.showTimeAxis = _.isUndefined(settings.showTimeAxis) ? true : settings.showTimeAxis;
 
     if (_.isUndefined(settings.margin) || _.isEmpty(settings.margin)) {
         settings.margin = {
-            left: 100,
+            left: 0,
             top: 50,
             right: 50,
             bottom: 50
         }
     } else {
-        settings.margin.left = settings.margin.left ? settings.margin.left : 100;
-        settings.margin.top = settings.margin.top ? settings.margin.top : 50;
-        settings.margin.right = settings.margin.right ? settings.margin.right : 50;
-        settings.margin.bottom = settings.margin.bottom ? settings.margin.bottom : 50;
+        settings.margin.left = _.isUndefined(settings.margin.left) ? 0 : settings.margin.left;
+        settings.margin.top = _.isUndefined(settings.margin.top) ? 50 : settings.margin.top;
+        settings.margin.right = _.isUndefined(settings.margin.right) ? 50 : settings.margin.right;
+        settings.margin.bottom = _.isUndefined(settings.margin.bottom) ? 50 : settings.margin.bottom;
     }
 
     if (_.isUndefined(settings.style) || _.isEmpty(settings.style)) {
         settings.style = {
             backgroundColor: '#fff',
             color: '#222',
-            barColor: '#bbb',
+            todayColor: '#222',
+            labelColor: '#222',
+            barColor: '#ccc',
             progressColor: '#222',
             overrunBarColor: 'red',
-            overrunProgressColor: '#222'
-
+            overrunProgressColor: '#222',
+            fontFamily: 'sans-serif',
+            fontSize: 12,
+            axis: {
+                color: '#222'
+            }
         }
     } else {
+
         settings.style.backgroundColor = settings.style.backgroundColor ? settings.style.backgroundColor : '#fff';
         settings.style.color = settings.style.color ? settings.style.color : '#222';
-        settings.style.barColor = settings.style.barColor ? settings.style.barColor : '#bbb';
+        settings.style.todayColor = settings.style.todayColor ? settings.style.todayColor : settings.style.color;
+        settings.style.labelColor = settings.style.labelColor ? settings.style.labelColor : settings.style.color;
+        settings.style.barColor = settings.style.barColor ? settings.style.barColor : '#ccc';
         settings.style.progressColor = settings.style.progressColor ? settings.style.progressColor : settings.style.color;
         settings.style.overrunBarColor = settings.style.overrunBarColor ? settings.style.overrunBarColor : settings.style.barColor;
         settings.style.overrunProgressColor = settings.style.overrunProgressColor ? settings.style.overrunProgressColor : settings.style.progressColor;
+        settings.style.fontFamily = settings.style.fontFamily ? settings.style.fontFamily : 'sans-serif';
+        settings.style.fontSize = settings.style.fontSize ? settings.style.fontSize : 12;
+
+        if (!settings.style.axis) {
+            settings.style.axis.color = settings.style.color;
+        } else {
+            settings.style.axis.color = settings.style.axis.color ? settings.style.axis.color : settings.style.color;
+        }
     }
 
     return settings;
@@ -25694,27 +25721,61 @@ function removeProgressGantt(settings) {
 
 function prepareDataFunctions(settings) {
 
-    settings.y = d3.scaleBand().padding(0.05).range([0, settings.height]);
+    settings.y = d3.scaleBand().padding(0.1).range([0, settings.height]);
     settings.y.domain(settings.data.map(function (d) { return d.label }));
 
-    settings.fromDate = d3.min(settings.data, function (d) { return getStartOfDay(d.startDate); });
-    settings.toDate = d3.max(settings.data, function (d) { return getStartOfDay(d.endDate); });
-    settings.x = d3.scaleLinear().range([0, settings.width]).domain([getStartOfDay(settings.fromDate), getStartOfDay(settings.toDate)]).nice();
+    settings.fromDate = d3.min(settings.data.filter(
+        function (d) { return d.startDate; }),
+        function (d) {
+            return getStartOfDay(d.startDate);
+        });
+    settings.toDate = d3.max(settings.data.filter(
+        function (d) { return d.startDate; }),
+        function (d) {
+            if (d.endDate && d.overrunDate) {
+                return Math.max(getStartOfDay(d.endDate), getStartOfDay(d.overrunDate));
+            } else if (d.overrun) {
+                return getStartOfDay();
+            } else {
+                return getStartOfDay(d.endDate || d.overrunDate);
+            }
+        });
+    settings.x = d3.scaleTime()
+        .range([0, settings.width])
+        .domain([getStartOfDay(settings.fromDate), getStartOfDay(settings.toDate)]);
+    if (settings.showTimeAxis) {
+        settings.x.nice();
+    }
 
 }
 
 function drawAxis(settings) {
-    settings.yAxis = settings.g.append('g')
-        .call(d3.axisLeft(settings.y).tickSize(0));
 
-    settings.topAxis = settings.g.append('g')
-        .call(d3.axisTop(settings.x).tickFormat(d3.timeFormat("%b %d")));
-    settings.bottomAxis = settings.g.append('g')
-        .attr('transform', 'translate(0,' + settings.height + ')')
-        .call(d3.axisBottom(settings.x).tickFormat(d3.timeFormat("%b %d")));
+    if (settings.showTimeAxis) {
+        settings.topAxis = settings.g.append('g')
+            .call(d3.axisTop(settings.x)
+                .tickFormat(d3.timeFormat('%b %d')));
+        settings.topAxis
+            .selectAll('text')
+            .attr('font-size', settings.style.fontSize + 'px')
+            .attr('font-family', settings.style.fontFamily)
+            .style('fill', settings.style.axis.color)
+            .style('text-anchor', 'start');
+
+        settings.bottomAxis = settings.g.append('g')
+            .attr('transform', 'translate(0,' + settings.height + ')')
+            .call(d3.axisBottom(settings.x)
+                .tickFormat(d3.timeFormat('%b %d')));
+        settings.bottomAxis
+            .selectAll('text')
+            .attr('font-size', settings.style.fontSize + 'px')
+            .attr('font-family', settings.style.fontFamily)
+            .style('fill', settings.style.axis.color)
+            .style('text-anchor', 'start');
+    }
 }
 
-function drawBars(settings) {
+function drawTimeConsumptionBars(settings) {
     settings.g
         .selectAll('.bar')
         .data(settings.data.filter(function (d) { return d.startDate; }))
@@ -25733,11 +25794,23 @@ function drawBars(settings) {
             })
         .attr('y', function (d) { return settings.y(d.label) })
         .attr('height', settings.y.bandwidth())
-        .attr('fill', settings.style.barColor);
+        .attr('fill', settings.style.barColor)
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
+}
+
+function drawOverrunBars(settings) {
 
     settings.g
         .selectAll('.overrun-bar')
-        .data(settings.data.filter(function (d) { return d.startDate && (d.overrun || d.overrunDate); }))
+        .data(settings.data.filter(function (d) { return d.startDate && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf(); }))
         .enter().append('rect')
         .attr('class', 'overrun-bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.endDate)) })
@@ -25749,10 +25822,23 @@ function drawBars(settings) {
                     return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.endDate)));
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) })
-        .attr('height', settings.y.bandwidth())
-        .attr('fill', settings.style.overrunBarColor);
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 2; })
+        .attr('height', settings.y.bandwidth() / 6)
+        .attr('fill', settings.style.overrunBarColor)
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
 
+
+}
+
+function drawProgressBars(settings) {
     settings.g
         .selectAll('.progress-bar')
         .data(settings.data.filter(function (d) { return d.startDate && d.progress; }))
@@ -25762,37 +25848,185 @@ function drawBars(settings) {
         .attr('width',
             function (d) {
                 if (d.overrun && !d.overrunDate) {
-                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate))) * d.progress;
+                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
                 } else if (d.overrunDate) {
-                    return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate))) * d.progress;
+                    return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
                 } else {
-                    return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate))) * d.progress;
+                    return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
                 }
             })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3 * 2; })
+        .attr('height', settings.y.bandwidth() / 3)
+        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
+}
+
+function drawBarLabels(settings) {
+
+    settings.g
+        .selectAll('.bar-label')
+        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .enter().append('text')
+        .attr('class', 'bar-label')
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
         .attr('y', function (d) { return settings.y(d.label) })
-        .attr('height', settings.y.bandwidth() / 2)
-        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; });
+        .attr('alignment-baseline', 'hanging')
+        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('text-anchor', 'start')
+        .style('fill', settings.style.labelColor)
+        .text(function (d) { return d.label; })
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
+}
+
+function drawDateLabels(settings) {
+    let formatTime = d3.timeFormat('%b %d');
+
+    settings.g
+        .selectAll('.start-date-label')
+        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .enter().append('text')
+        .attr('class', 'start-date-label')
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3; })
+        .attr('alignment-baseline', 'hanging')
+        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('text-anchor', 'start')
+        .style('fill', settings.style.labelColor)
+        .text(function (d) { return formatTime(getMoment(d.startDate)); })
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
+
+
+
+    settings.g
+        .selectAll('.end-date-label')
+        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .enter().append('text')
+        .attr('class', 'end-date-label')
+        .attr('x', function (d) {
+            if (d.overrun && !d.overrunDate) {
+                return 2 + settings.x(getStartOfDay(getMoment()));
+            } else if (d.overrunDate) {
+                return 2 + settings.x(getStartOfDay(d.overrunDate));
+            } else {
+                return 2 + settings.x(getStartOfDay(d.endDate));
+            }
+        })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3; })
+        .attr('alignment-baseline', 'hanging')
+        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('text-anchor', 'start')
+        .style('fill', settings.style.labelColor)
+        .text(function (d) {
+            if (d.overrun && !d.overrunDate) {
+                return formatTime(getStartOfDay(getMoment()));
+            } else if (d.overrunDate) {
+                return formatTime(getStartOfDay(d.overrunDate));
+            } else {
+                return formatTime(getStartOfDay(d.endDate));
+            }
+        })
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
+
+}
+
+function drawProgressLabels(settings) {
+    settings.g
+        .selectAll('.progress-label')
+        .data(settings.data.filter(function (d) { return d.startDate && d.progress; }))
+        .enter().append('text')
+        .attr('class', 'progress-label')
+        .attr('x',
+            function (d) {
+                if (d.overrun && !d.overrunDate) {
+                    return 2 + settings.x(getStartOfDay(getMoment()));
+                } else if (d.overrunDate) {
+                    return 2 + settings.x(getStartOfDay(d.overrunDate));
+                } else {
+                    return 2 + settings.x(getStartOfDay(d.endDate));
+                }
+            })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3 * 2; })
+        .attr('alignment-baseline', 'hanging')
+        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('text-anchor', 'start')
+        .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
+        .text(function (d) { return formatPercentage(d.progress); })
+        .on('click', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+        });
+}
+
+
+function drawBars(settings) {
+    drawTimeConsumptionBars(settings);
+    drawOverrunBars(settings);
+    drawProgressBars(settings);
 }
 
 function drawToday(settings) {
-    let x = settings.x(getStartOfDay(getMoment())) + 0.5;
-    let y1 = settings.height;
-    let y2 = 0;
-    settings.g.append('line')
-        .attr('x1', x)
-        .attr('y1', y1)
-        .attr('x2', x)
-        .attr('y2', y2)
-        .style('stroke-width', '3')
-        .style('stroke', settings.style.backgroundColor);
+    let today = getStartOfDay(getMoment());
+    if (settings.fromDate.valueOf() <= today.valueOf() && today.valueOf() <= settings.toDate.valueOf()) {
+        let x = settings.x(getStartOfDay(getMoment())) + 0.5;
+        let y1 = settings.height;
+        let y2 = 0;
+        settings.g.append('line')
+            .attr('x1', x)
+            .attr('y1', y1)
+            .attr('x2', x)
+            .attr('y2', y2)
+            .style('stroke-width', '3')
+            .style('stroke', settings.style.backgroundColor);
 
-    settings.g.append('line')
-        .attr('x1', x)
-        .attr('y1', y1)
-        .attr('x2', x)
-        .attr('y2', y2)
-        .style('stroke-width', '1')
-        .style('stroke', settings.style.color);
+        settings.g.append('line')
+            .attr('x1', x)
+            .attr('y1', y1)
+            .attr('x2', x)
+            .attr('y2', y2)
+            .style('stroke-width', '1')
+            .style('stroke', settings.style.color);
+    }
 }
 
 function drawProgressGantt(settings) {
@@ -25811,6 +26045,9 @@ function drawProgressGantt(settings) {
     prepareDataFunctions(settings);
     drawBars(settings);
     drawToday(settings);
+    drawBarLabels(settings);
+    drawDateLabels(settings);
+    drawProgressLabels(settings);
     drawAxis(settings);
 
 }
