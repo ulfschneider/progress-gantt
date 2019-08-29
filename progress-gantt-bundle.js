@@ -25614,6 +25614,14 @@ const Base64 = require('js-base64').Base64;
 const _ = require('underscore');
 const moment = require('moment');
 
+function equalsIgnoreCase(a, b) {
+    if (a && b) {
+        return a.toString().toLowerCase() == b.toString().toLowerCase();
+    } else {
+        return false;
+    }
+}
+
 function getStartOfDay(date) {
     return getMoment(date).startOf('day');
 }
@@ -25751,7 +25759,8 @@ function prepareDataFunctions(settings) {
 
 function drawAxis(settings) {
 
-    if (settings.showTimeAxis) {
+    if (equalsIgnoreCase(settings.showTimeAxis, 'top') ||
+        settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'bottom')) {
         settings.topAxis = settings.g.append('g')
             .call(d3.axisTop(settings.x)
                 .tickFormat(d3.timeFormat('%b %d')));
@@ -25761,7 +25770,9 @@ function drawAxis(settings) {
             .attr('font-family', settings.style.fontFamily)
             .style('fill', settings.style.axis.color)
             .style('text-anchor', 'start');
-
+    }
+    if (equalsIgnoreCase(settings.showTimeAxis, 'bottom') ||
+        settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'top')) {
         settings.bottomAxis = settings.g.append('g')
             .attr('transform', 'translate(0,' + settings.height + ')')
             .call(d3.axisBottom(settings.x)
