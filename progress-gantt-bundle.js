@@ -25751,7 +25751,7 @@ function prepareDataFunctions(settings) {
     settings.x = d3.scaleTime()
         .range([0, settings.width])
         .domain([getStartOfDay(settings.fromDate), getStartOfDay(settings.toDate)]);
-    if (settings.showTimeAxis) {
+    if (settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.x.nice();
     }
 
@@ -25760,7 +25760,7 @@ function prepareDataFunctions(settings) {
 function drawAxis(settings) {
 
     if (equalsIgnoreCase(settings.showTimeAxis, 'top') ||
-        settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'bottom')) {
+        settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'bottom') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.topAxis = settings.g.append('g')
             .call(d3.axisTop(settings.x)
                 .tickFormat(d3.timeFormat('%b %d')));
@@ -25772,7 +25772,7 @@ function drawAxis(settings) {
             .style('text-anchor', 'start');
     }
     if (equalsIgnoreCase(settings.showTimeAxis, 'bottom') ||
-        settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'top')) {
+        settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'top') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.bottomAxis = settings.g.append('g')
             .attr('transform', 'translate(0,' + settings.height + ')')
             .call(d3.axisBottom(settings.x)
