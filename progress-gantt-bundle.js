@@ -25627,7 +25627,7 @@ function getStartOfDay(date) {
 }
 
 function getMoment(date) {
-    return moment(date);
+    return date ? moment(date) : moment();
 }
 
 function formatPercentage(percentage) {
