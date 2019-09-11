@@ -26030,7 +26030,7 @@ function drawToday(settings) {
     let today = getStartOfDay(getMoment());
     if (settings.fromDate.valueOf() <= today.valueOf() && today.valueOf() <= settings.toDate.valueOf()) {
         let x = settings.x(getStartOfDay(getMoment())) + 0.5;
-        let y1 = settings.height;
+        let y1 = settings.innerHeight;
         let y2 = 0;
         settings.g.append('line')
             .attr('x1', x)
