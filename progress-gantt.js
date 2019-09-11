@@ -154,8 +154,7 @@ function drawAxis(settings) {
     if (equalsIgnoreCase(settings.showTimeAxis, 'top') ||
         settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'bottom') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.topAxis = settings.g.append('g')
-            .call(d3.axisTop(settings.x)
-                .tickFormat(d3.timeFormat('%b %d')));
+            .call(d3.axisTop(settings.x).ticks(Math.floor(settings.innerWidth / 120)).tickFormat(d3.timeFormat("%b %d")));
         settings.topAxis
             .selectAll('text')
             .attr('font-size', settings.style.fontSize + 'px')
@@ -167,8 +166,7 @@ function drawAxis(settings) {
         settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'top') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.bottomAxis = settings.g.append('g')
             .attr('transform', 'translate(0,' + settings.innerHeight + ')')
-            .call(d3.axisBottom(settings.x)
-                .tickFormat(d3.timeFormat('%b %d')));
+            .call(d3.axisBottom(settings.x).ticks(Math.floor(settings.innerWidth / 120)).tickFormat(d3.timeFormat("%b %d")));
         settings.bottomAxis
             .selectAll('text')
             .attr('font-size', settings.style.fontSize + 'px')
@@ -316,7 +314,7 @@ function drawDateLabels(settings) {
         .enter().append('text')
         .attr('class', 'start-date-label')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3; })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * settings.y.bandwidth() / 3, 2 * settings.style.fontSize); })
         .attr('alignment-baseline', 'hanging')
         .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
         .attr('font-family', settings.style.fontFamily)
@@ -349,7 +347,7 @@ function drawDateLabels(settings) {
                 return 2 + settings.x(getStartOfDay(d.endDate));
             }
         })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3; })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * settings.y.bandwidth() / 3, 2 * settings.style.fontSize); })
         .attr('alignment-baseline', 'hanging')
         .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
         .attr('font-family', settings.style.fontFamily)
@@ -392,7 +390,7 @@ function drawProgressLabels(settings) {
                     return 2 + settings.x(getStartOfDay(d.endDate));
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3 * 2; })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(settings.y.bandwidth() / 3, settings.style.fontSize); })
         .attr('alignment-baseline', 'hanging')
         .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
         .attr('font-family', settings.style.fontFamily)
