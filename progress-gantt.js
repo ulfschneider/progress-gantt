@@ -205,13 +205,13 @@ function drawTimeConsumptionBars(settings) {
         .attr('height', settings.y.bandwidth())
         .attr('fill', settings.style.barColor)
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
 }
 
@@ -235,14 +235,15 @@ function drawOverrunBars(settings) {
         .attr('height', overrunBarHeight(settings))
         .attr('fill', settings.style.overrunBarColor)
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
+
 
 
 }
@@ -269,14 +270,15 @@ function drawProgressBars(settings) {
         .attr('height', progressBarHeight(settings))
         .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
+
 }
 
 function drawBarLabels(settings) {
@@ -295,14 +297,15 @@ function drawBarLabels(settings) {
         .style('fill', settings.style.labelColor)
         .text(function (d) { return d.label; })
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
+
 }
 
 function drawDateLabels(settings) {
@@ -322,15 +325,14 @@ function drawDateLabels(settings) {
         .style('fill', settings.style.labelColor)
         .text(function (d) { return d.startDate ? formatTime(getMoment(d.startDate)) : ''; })
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
-
 
 
     settings.g
@@ -363,14 +365,15 @@ function drawDateLabels(settings) {
             }
         })
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
+
 
 }
 
@@ -398,13 +401,13 @@ function drawProgressLabels(settings) {
         .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
         .text(function (d) { return formatPercentage(d.progress); })
         .on('click', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
+            if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'pointer') };
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
         })
         .on('mouseout', function (d) {
-            if (settings.callbacks && settings.callbacks.barOnClick) { d3.select(this).style('cursor', 'default') };
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
 }
 
