@@ -25732,8 +25732,7 @@ function removeProgressGantt(settings) {
 function prepareDataFunctions(settings) {
 
     settings.y = d3.scaleBand().padding(0.1).range([0, settings.height]);
-    settings.y.domain(settings.data.filter(
-        function (d) { return d.startDate; }).map(function (d) { return d.label }));
+    settings.y.domain(settings.data.map(function (d) { return d.label }));
 
     settings.fromDate = d3.min(settings.data.filter(
         function (d) { return d.startDate; }),
@@ -25800,18 +25799,18 @@ function overrunBarHeight(settings) {
 function drawTimeConsumptionBars(settings) {
     settings.g
         .selectAll('.bar')
-        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .data(settings.data.filter(function (d) { return d.startDate || settings.fromDate; }))
         .enter().append('rect')
         .attr('class', 'bar')
-        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
         .attr('width',
             function (d) {
                 if (d.overrun && !d.overrunDate) {
-                    return settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate));
+                    return settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate || settings.fromDate));
                 } else if (d.overrunDate) {
-                    return settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate));
+                    return settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate || settings.fromDate));
                 } else {
-                    return settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate));
+                    return settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate || settings.fromDate));
                 }
             })
         .attr('y', function (d) { return settings.y(d.label) })
@@ -25832,7 +25831,7 @@ function drawOverrunBars(settings) {
 
     settings.g
         .selectAll('.overrun-bar')
-        .data(settings.data.filter(function (d) { return d.startDate && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf(); }))
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf(); }))
         .enter().append('rect')
         .attr('class', 'overrun-bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.endDate)) })
@@ -25864,18 +25863,18 @@ function drawProgressBars(settings) {
 
     settings.g
         .selectAll('.progress-bar')
-        .data(settings.data.filter(function (d) { return d.startDate && d.progress; }))
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progress; }))
         .enter().append('rect')
         .attr('class', 'progress-bar')
-        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
         .attr('width',
             function (d) {
                 if (d.overrun && !d.overrunDate) {
-                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
+                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
                 } else if (d.overrunDate) {
-                    return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
+                    return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
                 } else {
-                    return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
+                    return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
                 }
             })
         .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - progressBarHeight(settings); })
@@ -25896,10 +25895,10 @@ function drawBarLabels(settings) {
 
     settings.g
         .selectAll('.bar-label')
-        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .data(settings.data.filter(function (d) { return d.startDate || settings.fromDate; }))
         .enter().append('text')
         .attr('class', 'bar-label')
-        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
         .attr('y', function (d) { return settings.y(d.label) })
         .attr('alignment-baseline', 'hanging')
         .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
@@ -25923,17 +25922,17 @@ function drawDateLabels(settings) {
 
     settings.g
         .selectAll('.start-date-label')
-        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .data(settings.data.filter(function (d) { return d.startDate || settings.fromDate; }))
         .enter().append('text')
         .attr('class', 'start-date-label')
-        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate)) })
+        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
         .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3; })
         .attr('alignment-baseline', 'hanging')
         .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
         .style('fill', settings.style.labelColor)
-        .text(function (d) { return formatTime(getMoment(d.startDate)); })
+        .text(function (d) { return d.startDate ? formatTime(getMoment(d.startDate)) : ''; })
         .on('click', function (d) {
             if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
         })
@@ -25948,7 +25947,7 @@ function drawDateLabels(settings) {
 
     settings.g
         .selectAll('.end-date-label')
-        .data(settings.data.filter(function (d) { return d.startDate; }))
+        .data(settings.data.filter(function (d) { return d.startDate || settings.fromDate; }))
         .enter().append('text')
         .attr('class', 'end-date-label')
         .attr('x', function (d) {
@@ -25990,7 +25989,7 @@ function drawDateLabels(settings) {
 function drawProgressLabels(settings) {
     settings.g
         .selectAll('.progress-label')
-        .data(settings.data.filter(function (d) { return d.startDate && d.progress; }))
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progress; }))
         .enter().append('text')
         .attr('class', 'progress-label')
         .attr('x',
