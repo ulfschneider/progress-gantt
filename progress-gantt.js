@@ -99,7 +99,9 @@ function validateSettings(settings) {
         settings.style.fontSize = settings.style.fontSize ? settings.style.fontSize : 12;
 
         if (!settings.style.axis) {
-            settings.style.axis.color = settings.style.color;
+            settings.style.axis = {
+                color: settings.style.color
+            }
         } else {
             settings.style.axis.color = settings.style.axis.color ? settings.style.axis.color : settings.style.color;
         }
