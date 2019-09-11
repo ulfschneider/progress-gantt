@@ -69,6 +69,9 @@ function validateSettings(settings) {
         settings.margin.bottom = _.isUndefined(settings.margin.bottom) ? 50 : settings.margin.bottom;
     }
 
+    settings.innerWidth = settings.width - settings.margin.left - settings.margin.right;
+    settings.innerHeight = settings.height - settings.margin.top - settings.margin.bottom;
+
     if (_.isUndefined(settings.style) || _.isEmpty(settings.style)) {
         settings.style = {
             backgroundColor: '#fff',
@@ -122,7 +125,7 @@ function removeProgressGantt(settings) {
 
 function prepareDataFunctions(settings) {
 
-    settings.y = d3.scaleBand().padding(0.1).range([0, settings.height]);
+    settings.y = d3.scaleBand().padding(0.1).range([0, settings.innerHeight]);
     settings.y.domain(settings.data.map(function (d) { return d.label }));
 
     settings.fromDate = d3.min(settings.data.filter(
@@ -142,12 +145,8 @@ function prepareDataFunctions(settings) {
             }
         });
     settings.x = d3.scaleTime()
-        .range([0, settings.width])
+        .range([0, settings.innerWidth])
         .domain([getStartOfDay(settings.fromDate), getStartOfDay(settings.toDate)]);
-    if (settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
-        settings.x.nice();
-    }
-
 }
 
 function drawAxis(settings) {
@@ -167,7 +166,7 @@ function drawAxis(settings) {
     if (equalsIgnoreCase(settings.showTimeAxis, 'bottom') ||
         settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'top') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.bottomAxis = settings.g.append('g')
-            .attr('transform', 'translate(0,' + settings.height + ')')
+            .attr('transform', 'translate(0,' + settings.innerHeight + ')')
             .call(d3.axisBottom(settings.x)
                 .tickFormat(d3.timeFormat('%b %d')));
         settings.bottomAxis
@@ -222,7 +221,7 @@ function drawOverrunBars(settings) {
 
     settings.g
         .selectAll('.overrun-bar')
-        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf(); }))
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf(); }))
         .enter().append('rect')
         .attr('class', 'overrun-bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.endDate)) })
@@ -261,7 +260,7 @@ function drawProgressBars(settings) {
         .attr('width',
             function (d) {
                 if (d.overrun && !d.overrunDate) {
-                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
+                    return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
                 } else if (d.overrunDate) {
                     return (settings.x(getStartOfDay(d.overrunDate)) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
                 } else {
@@ -449,8 +448,8 @@ function drawProgressGantt(settings) {
     let d3svg = settings.d3svg;
 
     d3svg
-        .attr('width', settings.width + settings.margin.left + settings.margin.right)
-        .attr('height', settings.height + settings.margin.top + settings.margin.bottom);
+        .attr('width', settings.width)
+        .attr('height', settings.height);
 
     settings.g = d3svg.append('g')
         .attr('transform', 'translate(' + (settings.margin.left) + "," + (settings.margin.top) + ')');
