@@ -123,7 +123,8 @@ function removeProgressGantt(settings) {
 function prepareDataFunctions(settings) {
 
     settings.y = d3.scaleBand().padding(0.1).range([0, settings.height]);
-    settings.y.domain(settings.data.map(function (d) { return d.label }));
+    settings.y.domain(settings.data.filter(
+        function (d) { return d.startDate; }).map(function (d) { return d.label }));
 
     settings.fromDate = d3.min(settings.data.filter(
         function (d) { return d.startDate; }),
