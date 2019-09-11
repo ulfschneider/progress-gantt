@@ -177,6 +177,14 @@ function drawAxis(settings) {
     }
 }
 
+function progressBarHeight(settings) {
+    return Math.min(settings.y.bandwidth() / 3, settings.style.fontSize);
+}
+
+function overrunBarHeight(settings) {
+    return Math.min(settings.y.bandwidth() / 6, settings.style.fontSize / 2);
+}
+
 function drawTimeConsumptionBars(settings) {
     settings.g
         .selectAll('.bar')
@@ -224,8 +232,8 @@ function drawOverrunBars(settings) {
                     return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.endDate)));
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 2; })
-        .attr('height', settings.y.bandwidth() / 6)
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - progressBarHeight(settings) - overrunBarHeight(settings); })
+        .attr('height', overrunBarHeight(settings))
         .attr('fill', settings.style.overrunBarColor)
         .on('click', function (d) {
             if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
@@ -241,6 +249,7 @@ function drawOverrunBars(settings) {
 }
 
 function drawProgressBars(settings) {
+
     settings.g
         .selectAll('.progress-bar')
         .data(settings.data.filter(function (d) { return d.startDate && d.progress; }))
@@ -257,8 +266,8 @@ function drawProgressBars(settings) {
                     return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate))) * Math.min(d.progress, 1.0);
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() / 3 * 2; })
-        .attr('height', settings.y.bandwidth() / 3)
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - progressBarHeight(settings); })
+        .attr('height', progressBarHeight(settings))
         .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
         .on('click', function (d) {
             if (settings.callbacks && settings.callbacks.barOnClick) { settings.callbacks.barOnClick(d, d3.event) }
