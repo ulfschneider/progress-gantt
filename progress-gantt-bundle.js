@@ -26049,49 +26049,13 @@ function drawDateLabels(settings) {
         });
 }
 
+
 function drawProgressLabels(settings) {
-    settings.g
-        .selectAll('.progress-label')
-        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progress; }))
-        .enter().append('text')
-        .attr('class', 'progress-label')
-        .attr('id', function (d) { return d.id + '-progress-label' })
-        .attr('x',
-            function (d) {
-                if (d.overrun && !d.overrunDate) {
-                    return 2 + settings.x(getStartOfDay(getMoment()));
-                } else if (d.overrunDate) {
-                    return 2 + settings.x(getStartOfDay(d.overrunDate));
-                } else {
-                    return 2 + settings.x(getStartOfDay(d.endDate));
-                }
-            })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
-        .attr('alignment-baseline', 'hanging')
-        .attr('font-size', fontSize(settings) + 'px')
-        .attr('font-family', settings.style.fontFamily)
-        .style('text-anchor', 'start')
-        .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
-        .text(function (d) { return formatPercentage(d.progress); })
-        .on('click', function (d) {
-            if (d.onClick) { d.onClick(d, d3.event) }
-        })
-        .on('mouseover', function (d) {
-            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
-        })
-        .on('mouseout', function (d) {
-            if (d.onClick) { d3.select(this).style('cursor', 'default') };
-        });
-}
 
-
-function drawProgressTags(settings) {
-
-    const getBackgroundOffset = function (d) {
+    const getBackgroundOffset = function (progressLabel) {
         try {
-            let progressLabel = d3.select('#' + d.id + '-progress-label');
             let width = progressLabel.node().getComputedTextLength();
-            return width ? width + 2 : 0;
+            return width ? width + 1 : 1;
         } catch (e) {
             //JSDOM is not able to operate with getComputedTextLength
             //therefore this code is not going to run in the tests
@@ -26099,9 +26063,8 @@ function drawProgressTags(settings) {
         return 2;
     }
 
-    const getBackgroundWidth = function (d) {
+    const getBackgroundWidth = function (progressTag) {
         try {
-            let progressTag = d3.select('#' + d.id + '-progress-tag-text');
             return progressTag.node().getComputedTextLength() + 2;
         } catch (e) {
             //JSDOM is not able to operate with getComputedTextLength
@@ -26110,25 +26073,58 @@ function drawProgressTags(settings) {
         return 0;
     }
 
-    settings.g
-        .selectAll('.progress-tag-background')
-        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progressTag; }))
-        .enter().append('rect')
-        .attr('class', 'progress-tag-background')
-        .attr('id', function (d) { return d.id + '-progress-tag-background' })
-        .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; });
+    const addProgressLabels = function (d, i) {
+        let progressLabel = d3.select(this).append('text')
+            .attr('x',
+                function (d) {
+                    if (d.overrun && !d.overrunDate) {
+                        return 2 + settings.x(getStartOfDay(getMoment()));
+                    } else if (d.overrunDate) {
+                        return 2 + settings.x(getStartOfDay(d.overrunDate));
+                    } else {
+                        return 2 + settings.x(getStartOfDay(d.endDate));
+                    }
+                })
+            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+            .attr('alignment-baseline', 'hanging')
+            .attr('font-size', fontSize(settings) + 'px')
+            .attr('font-family', settings.style.fontFamily)
+            .style('text-anchor', 'start')
+            .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
+            .text(function (d) { return formatPercentage(d.progress); });
 
-    settings.g
-        .selectAll('.progress-tag-text')
-        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progressTag; }))
-        .enter()
-        .append('text')
-        .attr('id', function (d) { return d.id + '-progress-tag-text' })
-        .attr('class', 'progress-tag-text')
-        .attr('x',
-            function (d) {
-                try {
-                    let offset = getBackgroundOffset(d) + 1;
+        if (d.progressTag) {
+            let rect = d3.select(this).append('rect')
+                .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; });
+
+            let text = d3.select(this).append('text')
+                .attr('x',
+                    function (d) {
+                        try {
+                            let offset = getBackgroundOffset(progressLabel) + 1;
+                            if (d.overrun && !d.overrunDate) {
+                                return 2 + settings.x(getStartOfDay(getMoment())) + offset;
+                            } else if (d.overrunDate) {
+                                return 2 + settings.x(getStartOfDay(d.overrunDate)) + offset;
+                            } else {
+                                return 2 + settings.x(getStartOfDay(d.endDate)) + offset;
+                            }
+                        } catch (e) {
+                            //JSDOM is not able to operate with getComputedTextLength
+                            //therefore this code is not going to run in the tests
+                        }
+                    })
+                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+                .attr('alignment-baseline', 'hanging')
+                .attr('font-size', fontSize(settings) + 'px')
+                .attr('font-family', settings.style.fontFamily)
+                .style('text-anchor', 'start')
+                .style('fill', settings.style.backgroundColor)
+                .text(function (d) { return d.progressTag; });
+
+            rect.attr('x',
+                function (d) {
+                    let offset = getBackgroundOffset(progressLabel);
                     if (d.overrun && !d.overrunDate) {
                         return 2 + settings.x(getStartOfDay(getMoment())) + offset;
                     } else if (d.overrunDate) {
@@ -26136,45 +26132,20 @@ function drawProgressTags(settings) {
                     } else {
                         return 2 + settings.x(getStartOfDay(d.endDate)) + offset;
                     }
-                } catch (e) {
-                    //JSDOM is not able to operate with getComputedTextLength
-                    //therefore this code is not going to run in the tests
-                }
-            })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
-        .attr('alignment-baseline', 'hanging')
-        .attr('font-size', fontSize(settings) + 'px')
-        .attr('font-family', settings.style.fontFamily)
-        .style('text-anchor', 'start')
-        .style('fill', settings.style.backgroundColor)
-        .text(function (d) { return d.progressTag; })
-        .on('click', function (d) {
-            if (d.onClick) { d.onClick(d, d3.event) }
-        })
-        .on('mouseover', function (d) {
-            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
-        })
-        .on('mouseout', function (d) {
-            if (d.onClick) { d3.select(this).style('cursor', 'default') };
-        });
-
+                })
+                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+                .attr('width', function (d) { return getBackgroundWidth(text); })
+                .attr('height', function (d) { return fontSize(settings); });
+        }
+    }
 
     settings.g
-        .selectAll('.progress-tag-background')
-        .attr('x',
-            function (d) {
-                let offset = getBackgroundOffset(d);
-                if (d.overrun && !d.overrunDate) {
-                    return 2 + settings.x(getStartOfDay(getMoment())) + offset;
-                } else if (d.overrunDate) {
-                    return 2 + settings.x(getStartOfDay(d.overrunDate)) + offset;
-                } else {
-                    return 2 + settings.x(getStartOfDay(d.endDate)) + offset;
-                }
-            })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
-        .attr('width', function (d) { return getBackgroundWidth(d); })
-        .attr('height', function (d) { return fontSize(settings); })
+        .selectAll('.progress-label')
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) }))
+        .enter()
+        .append('g')
+        .attr('class', 'progress-label')
+        .each(addProgressLabels)
         .on('click', function (d) {
             if (d.onClick) { d.onClick(d, d3.event) }
         })
@@ -26184,7 +26155,6 @@ function drawProgressTags(settings) {
         .on('mouseout', function (d) {
             if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
-
 }
 
 function drawBars(settings) {
@@ -26236,7 +26206,6 @@ function drawProgressGantt(settings) {
     drawBarLabels(settings);
     drawDateLabels(settings);
     drawProgressLabels(settings);
-    drawProgressTags(settings);
     drawAxis(settings);
 
 }
