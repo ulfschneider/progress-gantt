@@ -25614,6 +25614,10 @@ const Base64 = require('js-base64').Base64;
 const _ = require('underscore');
 const moment = require('moment');
 
+function createId() {
+    return Math.random().toString(36).substr(2, 9);
+}
+
 function equalsIgnoreCase(a, b) {
     if (a && b) {
         return a.toString().toLowerCase() == b.toString().toLowerCase();
@@ -25640,6 +25644,66 @@ function formatPercentage(percentage) {
     return (percentage ? percentage * 100 : 0).toFixed(fixed) + '%';
 }
 
+function lineHeight(settings) {
+    if (settings.data.hasDescription) {
+        return Math.min(settings.y.bandwidth() / 4, settings.style.fontSize);
+    } else {
+        return Math.min(settings.y.bandwidth() / 3, settings.style.fontSize);
+    }
+}
+
+function overrunBarHeight(settings) {
+    if (settings.data.hasDescription) {
+        return Math.min(settings.y.bandwidth() / 8, settings.style.fontSize / 2);
+    } else {
+        return Math.min(settings.y.bandwidth() / 6, settings.style.fontSize / 2);
+    }
+}
+
+function fontSize(settings) {
+    return lineHeight(settings);
+}
+
+
+function drawTextWithBackground({
+    text,
+    textAnchor,
+    x,
+    y,
+    color,
+    background,
+    settings
+}) {
+    let bkg = settings.g.append('rect')
+        .style('fill', background);
+    let txt = settings.g.append('text')
+        .attr('x', x)
+        .attr('y', y)
+        .attr('alignment-baseline', 'hanging')
+        .attr('font-size', fontSize(settings) + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('fill', color)
+        .style('text-anchor', textAnchor ? textAnchor : 'start')
+        .text(text);
+
+    try {
+        let length = txt.node().getComputedTextLength()
+        if (textAnchor == 'middle') {
+            bkg.attr('x', x - length / 2);
+        } else if (textAnchor == 'end') {
+            bkg.attr('x', x - length);
+        } else {
+            bkg.attr('x', x);
+        }
+        bkg.attr('y', y)
+            .attr('width', length)
+            .attr('height', settings.style.fontSize);
+    } catch (e) {
+        //JSDOM is not able to operate with getComputedTextLength
+        //therefore this code is not going to run in the tests
+    }
+}
+
 
 function validateSettings(settings) {
 
@@ -25657,6 +25721,14 @@ function validateSettings(settings) {
 
     if (!settings.data) {
         throw 'No data';
+    }
+
+    settings.data.hasDescription = false;
+    for (let d of settings.data) {
+        d.id = createId();
+        if (d.description) {
+            settings.data.hasDescription = true;
+        }
     }
 
     settings.d3svg = d3.select(settings.svg);
@@ -25785,13 +25857,6 @@ function drawAxis(settings) {
     }
 }
 
-function progressBarHeight(settings) {
-    return Math.min(settings.y.bandwidth() / 3, settings.style.fontSize);
-}
-
-function overrunBarHeight(settings) {
-    return Math.min(settings.y.bandwidth() / 6, settings.style.fontSize / 2);
-}
 
 function drawTimeConsumptionBars(settings) {
     settings.g
@@ -25840,7 +25905,7 @@ function drawOverrunBars(settings) {
                     return (settings.x(getStartOfDay(getMoment())) - settings.x(getStartOfDay(d.endDate)));
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - progressBarHeight(settings) - overrunBarHeight(settings); })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings) - overrunBarHeight(settings); })
         .attr('height', overrunBarHeight(settings))
         .attr('fill', settings.style.overrunBarColor)
         .on('click', function (d) {
@@ -25875,8 +25940,8 @@ function drawProgressBars(settings) {
                     return (settings.x(getStartOfDay(d.endDate)) - settings.x(getStartOfDay(d.startDate || settings.fromDate))) * Math.min(d.progress, 1.0);
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - progressBarHeight(settings); })
-        .attr('height', progressBarHeight(settings))
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
+        .attr('height', lineHeight(settings))
         .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
         .on('click', function (d) {
             if (d.onClick) { d.onClick(d, d3.event) }
@@ -25900,7 +25965,7 @@ function drawBarLabels(settings) {
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
         .attr('y', function (d) { return settings.y(d.label) })
         .attr('alignment-baseline', 'hanging')
-        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
         .style('fill', settings.style.labelColor)
@@ -25926,9 +25991,9 @@ function drawDateLabels(settings) {
         .enter().append('text')
         .attr('class', 'start-date-label')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * settings.y.bandwidth() / 3, 2 * settings.style.fontSize); })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * lineHeight(settings), 2 * settings.style.fontSize); })
         .attr('alignment-baseline', 'hanging')
-        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
         .style('fill', settings.style.labelColor)
@@ -25958,9 +26023,9 @@ function drawDateLabels(settings) {
                 return 2 + settings.x(getStartOfDay(d.endDate));
             }
         })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * settings.y.bandwidth() / 3, 2 * settings.style.fontSize); })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * lineHeight(settings), 2 * settings.style.fontSize); })
         .attr('alignment-baseline', 'hanging')
-        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
         .style('fill', settings.style.labelColor)
@@ -25982,8 +26047,6 @@ function drawDateLabels(settings) {
         .on('mouseout', function (d) {
             if (d.onClick) { d3.select(this).style('cursor', 'default') };
         });
-
-
 }
 
 function drawProgressLabels(settings) {
@@ -25992,6 +26055,7 @@ function drawProgressLabels(settings) {
         .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progress; }))
         .enter().append('text')
         .attr('class', 'progress-label')
+        .attr('id', function (d) { return d.id + '-progress-label' })
         .attr('x',
             function (d) {
                 if (d.overrun && !d.overrunDate) {
@@ -26002,9 +26066,9 @@ function drawProgressLabels(settings) {
                     return 2 + settings.x(getStartOfDay(d.endDate));
                 }
             })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(settings.y.bandwidth() / 3, settings.style.fontSize); })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
         .attr('alignment-baseline', 'hanging')
-        .attr('font-size', Math.min(settings.y.bandwidth() / 3, settings.style.fontSize) + 'px')
+        .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
         .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
@@ -26020,6 +26084,108 @@ function drawProgressLabels(settings) {
         });
 }
 
+
+function drawProgressTags(settings) {
+
+    const getBackgroundOffset = function (d) {
+        try {
+            let progressLabel = d3.select('#' + d.id + '-progress-label');
+            let width = progressLabel.node().getComputedTextLength();
+            return width ? width + 2 : 0;
+        } catch (e) {
+            //JSDOM is not able to operate with getComputedTextLength
+            //therefore this code is not going to run in the tests
+        }
+        return 2;
+    }
+
+    const getBackgroundWidth = function (d) {
+        try {
+            let progressTag = d3.select('#' + d.id + '-progress-tag-text');
+            return progressTag.node().getComputedTextLength() + 2;
+        } catch (e) {
+            //JSDOM is not able to operate with getComputedTextLength
+            //therefore this code is not going to run in the tests
+        }
+        return 0;
+    }
+
+    settings.g
+        .selectAll('.progress-tag-background')
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progressTag; }))
+        .enter().append('rect')
+        .attr('class', 'progress-tag-background')
+        .attr('id', function (d) { return d.id + '-progress-tag-background' })
+        .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; });
+
+    settings.g
+        .selectAll('.progress-tag-text')
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progressTag; }))
+        .enter()
+        .append('text')
+        .attr('id', function (d) { return d.id + '-progress-tag-text' })
+        .attr('class', 'progress-tag-text')
+        .attr('x',
+            function (d) {
+                try {
+                    let offset = getBackgroundOffset(d) + 1;
+                    if (d.overrun && !d.overrunDate) {
+                        return 2 + settings.x(getStartOfDay(getMoment())) + offset;
+                    } else if (d.overrunDate) {
+                        return 2 + settings.x(getStartOfDay(d.overrunDate)) + offset;
+                    } else {
+                        return 2 + settings.x(getStartOfDay(d.endDate)) + offset;
+                    }
+                } catch (e) {
+                    //JSDOM is not able to operate with getComputedTextLength
+                    //therefore this code is not going to run in the tests
+                }
+            })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+        .attr('alignment-baseline', 'hanging')
+        .attr('font-size', fontSize(settings) + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('text-anchor', 'start')
+        .style('fill', settings.style.backgroundColor)
+        .text(function (d) { return d.progressTag; })
+        .on('click', function (d) {
+            if (d.onClick) { d.onClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
+        });
+
+
+    settings.g
+        .selectAll('.progress-tag-background')
+        .attr('x',
+            function (d) {
+                let offset = getBackgroundOffset(d);
+                if (d.overrun && !d.overrunDate) {
+                    return 2 + settings.x(getStartOfDay(getMoment())) + offset;
+                } else if (d.overrunDate) {
+                    return 2 + settings.x(getStartOfDay(d.overrunDate)) + offset;
+                } else {
+                    return 2 + settings.x(getStartOfDay(d.endDate)) + offset;
+                }
+            })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+        .attr('width', function (d) { return getBackgroundWidth(d); })
+        .attr('height', function (d) { return fontSize(settings); })
+        .on('click', function (d) {
+            if (d.onClick) { d.onClick(d, d3.event) }
+        })
+        .on('mouseover', function (d) {
+            if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
+        })
+        .on('mouseout', function (d) {
+            if (d.onClick) { d3.select(this).style('cursor', 'default') };
+        });
+
+}
 
 function drawBars(settings) {
     drawTimeConsumptionBars(settings);
@@ -26070,6 +26236,7 @@ function drawProgressGantt(settings) {
     drawBarLabels(settings);
     drawDateLabels(settings);
     drawProgressLabels(settings);
+    drawProgressTags(settings);
     drawAxis(settings);
 
 }
