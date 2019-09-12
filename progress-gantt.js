@@ -56,46 +56,6 @@ function fontSize(settings) {
 }
 
 
-function drawTextWithBackground({
-    text,
-    textAnchor,
-    x,
-    y,
-    color,
-    background,
-    settings
-}) {
-    let bkg = settings.g.append('rect')
-        .style('fill', background);
-    let txt = settings.g.append('text')
-        .attr('x', x)
-        .attr('y', y)
-        .attr('alignment-baseline', 'hanging')
-        .attr('font-size', fontSize(settings) + 'px')
-        .attr('font-family', settings.style.fontFamily)
-        .style('fill', color)
-        .style('text-anchor', textAnchor ? textAnchor : 'start')
-        .text(text);
-
-    try {
-        let length = txt.node().getComputedTextLength()
-        if (textAnchor == 'middle') {
-            bkg.attr('x', x - length / 2);
-        } else if (textAnchor == 'end') {
-            bkg.attr('x', x - length);
-        } else {
-            bkg.attr('x', x);
-        }
-        bkg.attr('y', y)
-            .attr('width', length)
-            .attr('height', settings.style.fontSize);
-    } catch (e) {
-        //JSDOM is not able to operate with getComputedTextLength
-        //therefore this code is not going to run in the tests
-    }
-}
-
-
 function validateSettings(settings) {
 
     if (!settings) {
@@ -151,9 +111,9 @@ function validateSettings(settings) {
             todayColor: '#222',
             labelColor: '#222',
             barColor: '#ccc',
-            progressColor: '#222',
+            progressBarColor: '#222',
             overrunBarColor: 'red',
-            overrunProgressColor: '#222',
+            overrunProgressBarColor: '#222',
             fontFamily: 'sans-serif',
             fontSize: 12,
             axis: {
@@ -167,9 +127,9 @@ function validateSettings(settings) {
         settings.style.todayColor = settings.style.todayColor ? settings.style.todayColor : settings.style.color;
         settings.style.labelColor = settings.style.labelColor ? settings.style.labelColor : settings.style.color;
         settings.style.barColor = settings.style.barColor ? settings.style.barColor : '#ccc';
-        settings.style.progressColor = settings.style.progressColor ? settings.style.progressColor : settings.style.color;
+        settings.style.progressBarColor = settings.style.progressBarColor ? settings.style.progressBarColor : settings.style.color;
         settings.style.overrunBarColor = settings.style.overrunBarColor ? settings.style.overrunBarColor : settings.style.barColor;
-        settings.style.overrunProgressColor = settings.style.overrunProgressColor ? settings.style.overrunProgressColor : settings.style.progressColor;
+        settings.style.overrunProgressBarColor = settings.style.overrunProgressBarColor ? settings.style.overrunProgressBarColor : settings.style.progressBarColor;
         settings.style.fontFamily = settings.style.fontFamily ? settings.style.fontFamily : 'sans-serif';
         settings.style.fontSize = settings.style.fontSize ? settings.style.fontSize : 12;
 
@@ -333,7 +293,7 @@ function drawProgressBars(settings) {
             })
         .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
         .attr('height', lineHeight(settings))
-        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
+        .attr('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressBarColor : settings.style.progressBarColor; })
         .on('click', function (d) {
             if (d.onClick) { d.onClick(d, d3.event) }
         })
@@ -498,13 +458,19 @@ function drawProgressLabels(settings) {
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
-            .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
+            .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressBarColor : settings.style.progressBarColor; })
             .text(function (d) { return formatPercentage(d.progress); });
 
 
         if (d.progressTag) {
             let rect = d3.select(this).append('rect')
-                .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; });
+                .style('fill', function (d) {
+                    if (d.progressTagBackgroundColor) {
+                        return d.progressTagBackgroundColor;
+                    } else {
+                        return d.overrun || d.overrunDate ? settings.style.overrunProgressBarColor : settings.style.progressBarColor;
+                    }
+                });
 
             let text = d3.select(this).append('text')
                 .attr('x',
@@ -528,7 +494,7 @@ function drawProgressLabels(settings) {
                 .attr('font-size', fontSize(settings) + 'px')
                 .attr('font-family', settings.style.fontFamily)
                 .style('text-anchor', 'start')
-                .style('fill', settings.style.backgroundColor)
+                .style('fill', d.progressTagTextColor ? d.progressTagTextColor : settings.style.backgroundColor)
                 .text(function (d) { return d.progressTag; });
 
             rect.attr('x',
