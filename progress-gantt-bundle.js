@@ -25957,19 +25957,36 @@ function drawProgressBars(settings) {
 
 function drawBarLabels(settings) {
 
+    const addBarLabels = function (d, i) {
+
+        d3.select(this).append('text')
+            .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
+            .attr('y', function (d) { return settings.y(d.label) })
+            .attr('alignment-baseline', 'hanging')
+            .attr('font-size', fontSize(settings) + 'px')
+            .attr('font-family', settings.style.fontFamily)
+            .style('text-anchor', 'start')
+            .style('fill', settings.style.labelColor)
+            .text(function (d) { return d.label; })
+
+        d3.select(this).append('text')
+            .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
+            .attr('y', function (d) { return settings.y(d.label) + lineHeight(settings) })
+            .attr('alignment-baseline', 'hanging')
+            .attr('font-size', fontSize(settings) + 'px')
+            .attr('font-family', settings.style.fontFamily)
+            .style('text-anchor', 'start')
+            .style('fill', settings.style.labelColor)
+            .text(function (d) { return d.description; });
+    }
+
     settings.g
         .selectAll('.bar-label')
-        .data(settings.data.filter(function (d) { return d.startDate || settings.fromDate; }))
-        .enter().append('text')
+        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) }))
+        .enter()
+        .append('g')
         .attr('class', 'bar-label')
-        .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-        .attr('y', function (d) { return settings.y(d.label) })
-        .attr('alignment-baseline', 'hanging')
-        .attr('font-size', fontSize(settings) + 'px')
-        .attr('font-family', settings.style.fontFamily)
-        .style('text-anchor', 'start')
-        .style('fill', settings.style.labelColor)
-        .text(function (d) { return d.label; })
+        .each(addBarLabels)
         .on('click', function (d) {
             if (d.onClick) { d.onClick(d, d3.event) }
         })
@@ -26092,6 +26109,7 @@ function drawProgressLabels(settings) {
             .style('text-anchor', 'start')
             .style('fill', function (d) { return d.overrun || d.overrunDate ? settings.style.overrunProgressColor : settings.style.progressColor; })
             .text(function (d) { return formatPercentage(d.progress); });
+
 
         if (d.progressTag) {
             let rect = d3.select(this).append('rect')
