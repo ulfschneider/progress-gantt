@@ -25918,8 +25918,8 @@ function drawBarLabels(settings) {
 
         d3.select(this).append('text')
             .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)); })
-            .attr('y', function (d) { return settings.y(d.label) + lineHeight(settings);})
-            .attr('dominant-baseline', 'ideographic')
+            .attr('y', function (d) { return settings.y(d.label) + lineHeight(settings) / 2; })
+            .attr('dominant-baseline', 'middle')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
@@ -25928,8 +25928,8 @@ function drawBarLabels(settings) {
 
         d3.select(this).append('text')
             .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-            .attr('y', function (d) { return settings.y(d.label) + 2 * lineHeight(settings); })
-            .attr('dominant-baseline', 'ideographic')
+            .attr('y', function (d) { return settings.y(d.label) + lineHeight(settings) + lineHeight(settings) / 2; })
+            .attr('dominant-baseline', 'middle')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
@@ -25965,8 +25965,8 @@ function drawDateLabels(settings) {
         .enter().append('text')
         .attr('class', 'start-date-label')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
-        .attr('dominant-baseline', 'ideographic')
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings) - lineHeight(settings) / 2; })
+        .attr('dominant-baseline', 'middle')
         .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
@@ -25997,8 +25997,8 @@ function drawDateLabels(settings) {
                 return 2 + settings.x(getStartOfDay(d.endDate));
             }
         })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
-        .attr('dominant-baseline', 'ideographic')
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings) - lineHeight(settings) / 2; })
+        .attr('dominant-baseline', 'middle')
         .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
@@ -26059,8 +26059,8 @@ function drawProgressLabels(settings) {
                         return 2 + settings.x(getStartOfDay(d.endDate));
                     }
                 })
-            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth(); })
-            .attr('dominant-baseline', 'ideographic')
+            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings) / 2; })
+            .attr('dominant-baseline', 'middle')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
@@ -26095,8 +26095,8 @@ function drawProgressLabels(settings) {
                             //therefore this code is not going to run in the tests
                         }
                     })
-                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth(); })
-                .attr('dominant-baseline', 'ideographic')
+                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings) / 2; })
+                  .attr('dominant-baseline', 'middle')
                 .attr('font-size', fontSize(settings) + 'px')
                 .attr('font-family', settings.style.fontFamily)
                 .style('text-anchor', 'start')
