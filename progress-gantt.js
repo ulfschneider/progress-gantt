@@ -41,7 +41,7 @@ function labelLineFactor(settings) {
 }
 
 function lineHeight(settings) {
-    return Math.ceil(settings.y.bandwidth() / (2 + labelLineFactor(settings)));
+    return Math.floor(settings.y.bandwidth() / (2 + labelLineFactor(settings)));
 }
 
 function overrunBarHeight(settings) {
@@ -308,9 +308,9 @@ function drawBarLabels(settings) {
     const addBarLabels = function (d, i) {
 
         d3.select(this).append('text')
-            .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-            .attr('y', function (d) { return settings.y(d.label) })
-            .attr('dominant-baseline', 'hanging')
+            .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)); })
+            .attr('y', function (d) { return settings.y(d.label) + lineHeight(settings);})
+            .attr('dominant-baseline', 'ideographic')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
@@ -319,8 +319,8 @@ function drawBarLabels(settings) {
 
         d3.select(this).append('text')
             .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-            .attr('y', function (d) { return settings.y(d.label) + lineHeight(settings) })
-            .attr('dominant-baseline', 'hanging')
+            .attr('y', function (d) { return settings.y(d.label) + 2 * lineHeight(settings); })
+            .attr('dominant-baseline', 'ideographic')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
@@ -356,8 +356,8 @@ function drawDateLabels(settings) {
         .enter().append('text')
         .attr('class', 'start-date-label')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - (2 * lineHeight(settings)); })
-        .attr('dominant-baseline', 'hanging')
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
+        .attr('dominant-baseline', 'ideographic')
         .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
@@ -388,8 +388,8 @@ function drawDateLabels(settings) {
                 return 2 + settings.x(getStartOfDay(d.endDate));
             }
         })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - (2 * lineHeight(settings)); })
-        .attr('dominant-baseline', 'hanging')
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
+        .attr('dominant-baseline', 'ideographic')
         .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
         .style('text-anchor', 'start')
@@ -450,8 +450,8 @@ function drawProgressLabels(settings) {
                         return 2 + settings.x(getStartOfDay(d.endDate));
                     }
                 })
-            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
-            .attr('dominant-baseline', 'hanging')
+            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth(); })
+            .attr('dominant-baseline', 'ideographic')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
             .style('text-anchor', 'start')
@@ -486,8 +486,8 @@ function drawProgressLabels(settings) {
                             //therefore this code is not going to run in the tests
                         }
                     })
-                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
-                .attr('dominant-baseline', 'hanging')
+                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth(); })
+                .attr('dominant-baseline', 'ideographic')
                 .attr('font-size', fontSize(settings) + 'px')
                 .attr('font-family', settings.style.fontFamily)
                 .style('text-anchor', 'start')
