@@ -25653,11 +25653,7 @@ function lineHeight(settings) {
 }
 
 function overrunBarHeight(settings) {
-    if (settings.data.hasDescription) {
-        return Math.min(settings.y.bandwidth() / 8, settings.style.fontSize / 2);
-    } else {
-        return Math.min(settings.y.bandwidth() / 6, settings.style.fontSize / 2);
-    }
+    return lineHeight(settings) / 2;
 }
 
 function fontSize(settings) {
@@ -25968,7 +25964,7 @@ function drawDateLabels(settings) {
         .enter().append('text')
         .attr('class', 'start-date-label')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * lineHeight(settings), 2 * settings.style.fontSize); })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - (2 * lineHeight(settings)); })
         .attr('dominant-baseline', 'hanging')
         .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
@@ -26000,7 +25996,7 @@ function drawDateLabels(settings) {
                 return 2 + settings.x(getStartOfDay(d.endDate));
             }
         })
-        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(2 * lineHeight(settings), 2 * settings.style.fontSize); })
+        .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - (2 * lineHeight(settings)); })
         .attr('dominant-baseline', 'hanging')
         .attr('font-size', fontSize(settings) + 'px')
         .attr('font-family', settings.style.fontFamily)
@@ -26062,7 +26058,7 @@ function drawProgressLabels(settings) {
                         return 2 + settings.x(getStartOfDay(d.endDate));
                     }
                 })
-            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+            .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
             .attr('dominant-baseline', 'hanging')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
@@ -26098,7 +26094,7 @@ function drawProgressLabels(settings) {
                             //therefore this code is not going to run in the tests
                         }
                     })
-                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
                 .attr('dominant-baseline', 'hanging')
                 .attr('font-size', fontSize(settings) + 'px')
                 .attr('font-family', settings.style.fontFamily)
@@ -26117,7 +26113,7 @@ function drawProgressLabels(settings) {
                         return 2 + settings.x(getStartOfDay(d.endDate)) + offset;
                     }
                 })
-                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - Math.min(lineHeight(settings), settings.style.fontSize); })
+                .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings); })
                 .attr('width', function (d) { return getBackgroundWidth(text); })
                 .attr('height', function (d) { return fontSize(settings); });
         }
