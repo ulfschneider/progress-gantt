@@ -25644,12 +25644,13 @@ function formatPercentage(percentage) {
     return (percentage ? percentage * 100 : 0).toFixed(fixed) + '%';
 }
 
+
+function labelLineFactor(settings) {
+    return settings.data.hasDescription ? 2 : 1;
+}
+
 function lineHeight(settings) {
-    if (settings.data.hasDescription) {
-        return Math.min(settings.y.bandwidth() / 4, settings.style.fontSize);
-    } else {
-        return Math.min(settings.y.bandwidth() / 3, settings.style.fontSize);
-    }
+    return settings.y.bandwidth() / (2 + labelLineFactor(settings));
 }
 
 function overrunBarHeight(settings) {
