@@ -25650,7 +25650,7 @@ function labelLineFactor(settings) {
 }
 
 function lineHeight(settings) {
-    return settings.y.bandwidth() / (2 + labelLineFactor(settings));
+    return Math.ceil(settings.y.bandwidth() / (2 + labelLineFactor(settings)));
 }
 
 function overrunBarHeight(settings) {
