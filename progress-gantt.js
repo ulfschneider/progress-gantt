@@ -41,7 +41,7 @@ function labelLineFactor(settings) {
 }
 
 function lineHeight(settings) {
-    return settings.y.bandwidth() / (2 + labelLineFactor(settings));
+    return Math.min(settings.y.bandwidth() / (2 + labelLineFactor(settings)), settings.style.fontSize);
 }
 
 function overrunBarHeight(settings) {
@@ -313,8 +313,9 @@ function drawBarLabels(settings) {
             .attr('dominant-baseline', 'central')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
+            .style('white-space', 'pre')
             .style('text-anchor', 'start')
-            .style('fill', settings.style.labelColor)
+            .style('fill', settings.style.labelColor)            
             .text(function (d) { return d.label; })
 
         d3.select(this).append('text')
@@ -323,6 +324,7 @@ function drawBarLabels(settings) {
             .attr('dominant-baseline', 'central')
             .attr('font-size', fontSize(settings) + 'px')
             .attr('font-family', settings.style.fontFamily)
+            .style('white-space', 'pre')
             .style('text-anchor', 'start')
             .style('fill', settings.style.labelColor)
             .text(function (d) { return d.description; });

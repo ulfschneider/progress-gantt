@@ -1,6 +1,6 @@
 {
   "name": "progress-gantt",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "description": "Draw a svg progress gantt chart",
   "main": "progress-gantt.js",
   "scripts": {
