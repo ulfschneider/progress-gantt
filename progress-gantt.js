@@ -157,13 +157,17 @@ function prepareDataFunctions(settings) {
     settings.y = d3.scaleBand().padding(0.1).range([0, settings.innerHeight]);
     settings.y.domain(settings.data.map(function (d) { return d.label }));
 
-    settings.fromDate = d3.min(settings.data.filter(
-        function (d) { return d.startDate; }),
+    settings.fromDate = d3.min(settings.data,
         function (d) {
-            return getStartOfDay(d.startDate);
+            if (d.startDate) {
+                return getStartOfDay(d.startDate);
+            } else {
+                return getStartOfDay();
+            }
         });
-    settings.toDate = d3.max(settings.data.filter(
-        function (d) { return d.startDate; }),
+
+
+    settings.toDate = d3.max(settings.data,
         function (d) {
             if (d.endDate && d.overrunDate) {
                 return Math.max(getStartOfDay(d.endDate), getStartOfDay(d.overrunDate));
@@ -173,6 +177,7 @@ function prepareDataFunctions(settings) {
                 return getStartOfDay(d.endDate || d.overrunDate);
             }
         });
+
     settings.x = d3.scaleTime()
         .range([0, settings.innerWidth])
         .domain([getStartOfDay(settings.fromDate), getStartOfDay(settings.toDate)]);
@@ -315,7 +320,7 @@ function drawBarLabels(settings) {
             .attr('font-family', settings.style.fontFamily)
             .style('white-space', 'pre')
             .style('text-anchor', 'start')
-            .style('fill', settings.style.labelColor)            
+            .style('fill', settings.style.labelColor)
             .text(function (d) { return d.label; })
 
         d3.select(this).append('text')
@@ -489,7 +494,7 @@ function drawProgressLabels(settings) {
                         }
                     })
                 .attr('y', function (d) { return settings.y(d.label) + settings.y.bandwidth() - lineHeight(settings) / 2; })
-                  .attr('dominant-baseline', 'central')
+                .attr('dominant-baseline', 'central')
                 .attr('font-size', fontSize(settings) + 'px')
                 .attr('font-family', settings.style.fontFamily)
                 .style('text-anchor', 'start')
