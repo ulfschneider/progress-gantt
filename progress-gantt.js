@@ -671,8 +671,8 @@ function drawProgressGantt(settings) {
 
     prepareDataFunctions(settings);
     drawAxis(settings);
-    drawMarkers(settings);
     drawBars(settings);
+    drawMarkers(settings);
     drawToday(settings);
     drawBarLabels(settings);
     drawDateLabels(settings);
