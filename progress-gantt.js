@@ -4,17 +4,15 @@ const d3 = require('d3');
 const Base64 = require('js-base64').Base64;
 const _ = require('underscore');
 const moment = require('moment');
+const DATE_FORMAT = 'YYYY-MM-DD';
+const TICK_SIZE = 6;
 
 function createId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
 function equalsIgnoreCase(a, b) {
-    if (a && b) {
-        return a.toString().toLowerCase() == b.toString().toLowerCase();
-    } else {
-        return false;
-    }
+    return String(a).toLowerCase() == String(b).toLowerCase();
 }
 
 function getStartOfDay(date) {
@@ -84,6 +82,10 @@ function validateSettings(settings) {
     settings.height = settings.height ? settings.height : 400;
     settings.showTimeAxis = _.isUndefined(settings.showTimeAxis) ? true : settings.showTimeAxis;
 
+    if (!settings.markers) {
+        settings.markers = [];
+    }
+
     if (_.isUndefined(settings.margin) || _.isEmpty(settings.margin)) {
         settings.margin = {
             left: 0,
@@ -118,7 +120,6 @@ function validateSettings(settings) {
             }
         }
     } else {
-
         settings.style.backgroundColor = settings.style.backgroundColor ? settings.style.backgroundColor : '#fff';
         settings.style.color = settings.style.color ? settings.style.color : '#222';
         settings.style.todayColor = settings.style.todayColor ? settings.style.todayColor : settings.style.color;
@@ -165,7 +166,14 @@ function prepareDataFunctions(settings) {
                 return getStartOfDay();
             }
         });
-
+    if (settings.markers && settings.markers.length) {
+        settings.fromDate = d3.min(settings.markers, function (d) {
+            if (d.date) {
+                return Math.min(settings.fromDate, getStartOfDay(d.date));
+            }
+            return settings.fromDate;
+        });
+    }
 
     settings.toDate = d3.max(settings.data,
         function (d) {
@@ -177,6 +185,14 @@ function prepareDataFunctions(settings) {
                 return getStartOfDay(d.endDate || d.overrunDate);
             }
         });
+    if (settings.markers && settings.markers.length) {
+        settings.toDate = d3.max(settings.markers, function (d) {
+            if (d.date) {
+                return Math.max(settings.toDate, getStartOfDay(d.date));
+            }
+            return settings.toDate;
+        });
+    }
 
     settings.x = d3.scaleTime()
         .range([0, settings.innerWidth])
@@ -188,7 +204,7 @@ function drawAxis(settings) {
     if (equalsIgnoreCase(settings.showTimeAxis, 'top') ||
         settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'bottom') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.topAxis = settings.g.append('g')
-            .call(d3.axisTop(settings.x).ticks(Math.floor(settings.innerWidth / 120)).tickFormat(d3.timeFormat("%b %d")));
+            .call(d3.axisTop(settings.x).ticks(Math.floor(settings.innerWidth / 120)).tickFormat(d3.timeFormat("%b %d")).tickSize(TICK_SIZE));
         settings.topAxis
             .selectAll('text')
             .attr('font-size', settings.style.fontSize + 'px')
@@ -200,7 +216,7 @@ function drawAxis(settings) {
         settings.showTimeAxis && !equalsIgnoreCase(settings.showTimeAxis, 'top') && !equalsIgnoreCase(settings.showTimeAxis, 'false')) {
         settings.bottomAxis = settings.g.append('g')
             .attr('transform', 'translate(0,' + settings.innerHeight + ')')
-            .call(d3.axisBottom(settings.x).ticks(Math.floor(settings.innerWidth / 120)).tickFormat(d3.timeFormat("%b %d")));
+            .call(d3.axisBottom(settings.x).ticks(Math.floor(settings.innerWidth / 120)).tickFormat(d3.timeFormat("%b %d")).tickSize(TICK_SIZE));
         settings.bottomAxis
             .selectAll('text')
             .attr('font-size', settings.style.fontSize + 'px')
@@ -210,6 +226,23 @@ function drawAxis(settings) {
     }
 }
 
+function drawText({
+    text,
+    textAnchor,
+    x,
+    y,
+    color,
+    settings
+}) {
+    settings.g.append('text')
+        .attr('x', x)
+        .attr('y', y)
+        .attr('font-size', settings.style.fontSize + 'px')
+        .attr('font-family', settings.style.fontFamily)
+        .style('fill', color)
+        .style('text-anchor', textAnchor ? textAnchor : 'start')
+        .text(text);
+}
 
 function drawTimeConsumptionBars(settings) {
     settings.g
@@ -542,9 +575,20 @@ function drawBars(settings) {
     drawProgressBars(settings);
 }
 
+
+function isDateInRange(date, settings) {
+
+    let momentDate = getStartOfDay(date);
+
+    if (settings.fromDate.valueOf() <= momentDate.valueOf() && momentDate.valueOf() <= settings.toDate.valueOf()) {
+        return true;
+    }
+    return false;
+}
+
 function drawToday(settings) {
     let today = getStartOfDay(getMoment());
-    if (settings.fromDate.valueOf() <= today.valueOf() && today.valueOf() <= settings.toDate.valueOf()) {
+    if (isDateInRange(today, settings)) {
         let x = settings.x(getStartOfDay(getMoment())) + 0.5;
         let y1 = settings.innerHeight;
         let y2 = 0;
@@ -556,14 +600,60 @@ function drawToday(settings) {
             .style('stroke-width', '3')
             .style('stroke', settings.style.backgroundColor);
 
+
         settings.g.append('line')
             .attr('x1', x)
             .attr('y1', y1)
             .attr('x2', x)
             .attr('y2', y2)
             .style('stroke-width', '1')
-            .style('stroke', settings.style.color);
+            .style('stroke', settings.style.color)
+            .style('stroke-dasharray', ('3, 3'));
     }
+}
+
+function drawMarkers(settings) {
+
+    let mark = function (date, label, color) {
+        let x1 = settings.x(getStartOfDay(date)) + 0.5; //perfect align marker
+        let y1 = settings.innerHeight + TICK_SIZE;
+        let y2 = -TICK_SIZE;
+
+        if (x1 > 0.5) {
+            settings.g.append('line')
+                .attr('x1', x1)
+                .attr('y1', y1)
+                .attr('x2', x1)
+                .attr('y2', y2)
+                .style('stroke-width', '3')
+                .style('stroke', settings.style.backgroundColor);
+        }
+        settings.g.append('line')
+            .attr('x1', x1)
+            .attr('y1', y1)
+            .attr('x2', x1)
+            .attr('y2', y2)
+            .style('stroke-width', '1')
+            .style('stroke', color ? color : settings.style.color);
+
+
+        drawText({
+            text: (label ? label : getMoment(date).format(DATE_FORMAT)),
+            x: x1,
+            y: -lineHeight(settings) * 2 - TICK_SIZE,
+            color: color ? color : settings.style.color,
+            textAnchor: 'start',
+            settings: settings
+        });
+
+    }
+
+    settings.markers.forEach(m => {
+        if (isDateInRange(m.date, settings)) {
+            mark(m.date, m.label, m.color);
+        }
+    });
+
 }
 
 function drawProgressGantt(settings) {
@@ -580,13 +670,13 @@ function drawProgressGantt(settings) {
         .attr('transform', 'translate(' + (settings.margin.left) + "," + (settings.margin.top) + ')');
 
     prepareDataFunctions(settings);
+    drawAxis(settings);
+    drawMarkers(settings);
     drawBars(settings);
     drawToday(settings);
     drawBarLabels(settings);
     drawDateLabels(settings);
     drawProgressLabels(settings);
-    drawAxis(settings);
-
 }
 
 /**

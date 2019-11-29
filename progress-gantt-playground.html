@@ -51,8 +51,15 @@
 
         var config = {
             id: 'gantt',
-            height: 300,
-            showTimeAxis: false,
+            height: 400,
+            width: 700,
+            showTimeAxis: true,
+            margin: {
+                right: 100
+            },
+            markers: [
+                { date: '2019-01-01', label: 'new year´s day', color: 'green' },
+                { date: '2020-01-01', label: 'new year´s day', color: 'red' }],
             data: [
                 {
                     label: 'D1',
