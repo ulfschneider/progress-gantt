@@ -244,10 +244,18 @@ function drawText({
         .text(text);
 }
 
+function isInTimeRange(d, settings) {
+    let start = getStartOfDay(d.startDate || settings.fromDate);
+    let end = getStartOfDay((d.overrun && !d.overrunDate) ? getStartOfDay(getMoment()) : d.overrunDate || d.endDate);
+    return start && end && settings.fromDate.valueOf() <= start.valueOf() && start.valueOf() < end.valueOf();
+}
+
 function drawTimeConsumptionBars(settings) {
     settings.g
         .selectAll('.bar')
-        .data(settings.data.filter(function (d) { return d.startDate || settings.fromDate; }))
+        .data(settings.data.filter(function (d) {
+            return isInTimeRange(d, settings);
+        }))
         .enter().append('rect')
         .attr('class', 'bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
@@ -264,22 +272,29 @@ function drawTimeConsumptionBars(settings) {
         .attr('y', function (d) { return settings.y(d.label) })
         .attr('height', settings.y.bandwidth())
         .attr('fill', settings.style.barColor)
+        
         .on('click', function (d) {
             if (d.onClick) { d.onClick(d, d3.event) }
         })
         .on('mouseover', function (d) {
             if (d.onClick) { d3.select(this).style('cursor', 'pointer') };
+    
         })
         .on('mouseout', function (d) {
             if (d.onClick) { d3.select(this).style('cursor', 'default') };
-        });
+        })
+        .append("svg:title")
+        .text(function(d) { return d.toolTip })
 }
+
 
 function drawOverrunBars(settings) {
 
     settings.g
         .selectAll('.overrun-bar')
-        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf(); }))
+        .data(settings.data.filter(function (d) {
+            return isInTimeRange(d, settings) && d.endDate && (d.overrun || d.overrunDate) && getStartOfDay(d.overrunDate).valueOf() > getStartOfDay(d.endDate).valueOf();
+        }))
         .enter().append('rect')
         .attr('class', 'overrun-bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.endDate)) })
@@ -312,7 +327,9 @@ function drawProgressBars(settings) {
 
     settings.g
         .selectAll('.progress-bar')
-        .data(settings.data.filter(function (d) { return (d.startDate || settings.fromDate) && d.progress; }))
+        .data(settings.data.filter(function (d) {
+            return isInTimeRange(d, settings) && d.progress;
+        }))
         .enter().append('rect')
         .attr('class', 'progress-bar')
         .attr('x', function (d) { return settings.x(getStartOfDay(d.startDate || settings.fromDate)) })
@@ -337,7 +354,9 @@ function drawProgressBars(settings) {
         })
         .on('mouseout', function (d) {
             if (d.onClick) { d3.select(this).style('cursor', 'default') };
-        });
+        })
+        .append("svg:title")
+        .text(function(d) { return d.toolTip});
 
 }
 
