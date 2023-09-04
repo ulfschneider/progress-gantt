@@ -14,8 +14,6 @@
 
 Draw a progress gantt.
 
-<img src="https://github.com/ulfschneider/progress-gantt/blob/master/progress-gantt.png?raw=true"/>
-
 Play with the settings of the progress-gantt by visiting the [progress-gantt playground][8].
 
 Install in your Node project with
