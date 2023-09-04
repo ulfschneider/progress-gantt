@@ -944,8 +944,6 @@ function drawProgressGantt(settings) {
  *
  * Draw a progress gantt.
  *
- * <img src="https://github.com/ulfschneider/progress-gantt/blob/master/progress-gantt.png?raw=true"/>
- *
  * Play with the settings of the progress-gantt by visiting the [progress-gantt playground](https://htmlpreview.github.io/?https://github.com/ulfschneider/progress-gantt/blob/master/progress-gantt-playground.html).
  *
  * Install in your Node project with
