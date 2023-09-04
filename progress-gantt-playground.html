@@ -1,140 +1,148 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>progress-gantt</title>
 
     <style type="text/css">
-        body {
-            font-family: sans-serif;
-        }
+      body {
+        font-family: sans-serif;
+      }
 
-        a {
-            color: black;
-        }
+      a {
+        color: black;
+      }
 
-        textarea {
-            width: 100%;
-            outline: none;
-            border: none;
-            font-family: monospace;
-            font-size: 1.1em;
-            caret-color: red;
-        }
+      textarea {
+        width: 100%;
+        outline: none;
+        border: none;
+        font-family: monospace;
+        font-size: 1.1em;
+        caret-color: red;
+      }
 
-        #error {
-            color: white;
-            background: red;
-        }
+      #error {
+        color: white;
+        background: red;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>The progress-gantt Playground</h1>
     <p>A d3.js progress gantt chart</p>
 
     <svg id="gantt"></svg>
 
-    <p>Change the progress-gantt settings below and see the effect above <strong>on the fly</strong>. Please <a href='#'
-            onclick='location.reload();'>reload this
-            page for a reset of all settings</a>.</p>
+    <p>
+      Change the progress-gantt settings below and see the effect above
+      <strong>on the fly</strong>. Please
+      <a href="#" onclick="location.reload();"
+        >reload this page for a reset of all settings</a
+      >.
+    </p>
     <div id="error"></div>
-    <textarea id="config" spellcheck="false" autocorrect="off" autocapitalize="off" rows="75"></textarea>
+    <textarea
+      id="config"
+      spellcheck="false"
+      autocorrect="off"
+      autocapitalize="off"
+      rows="75"
+    ></textarea>
 
     <script src="./progress-gantt-bundle.js"></script>
     <script>
-        var progressGantt = require('progress-gantt');
-        var autosize = require('autosize');
+      var progressGantt = require("progress-gantt");
+      var autosize = require("autosize");
 
-        var config = {
-            id: 'gantt',
-            height: 400,
-            width: 700,
-            showTimeAxis: true,
-            margin: {
-                right: 100
-            },
-            markers: [
-                { date: '2019-01-01', label: 'new year´s day', color: 'green' },
-                { date: '2020-01-01', label: 'new year´s day', color: 'red' }],
-            data: [
-                {
-                    label: 'D1',
-                    startDate: '2019-03-17',
-                    endDate: '2019-05-15',
-                    overrun: true,
-                    overrunDate: '2019-05-28',
-                    progress: 1.0
-                },
-                {
-                    label: 'D1.5',
-                    startDate: '2019-05-16',
-                    endDate: '2019-05-30',
-                    overrun: true,
-                    overrunDate: '2019-05-31',
-                    progress: 1.0
-                },
-                {
-                    label: 'D2',
-                    startDate: '2019-05-28',
-                    endDate: '2019-07-02',
-                    overrun: true,
-                    overrunDate: '2019-07-24',
-                    progress: 1.0
-                },
-                {
-                    label: 'D3',
-                    startDate: '2019-07-03',
-                    endDate: '2019-07-14',
-                    overrun: true,
-                    overrunDate: '2019-07-17',
-                    progress: 1.0
-                },
-                {
-                    label: 'D4',
-                    startDate: '2019-07-03',
-                    endDate: '2019-07-30',
-                    overrun: true,
-                    progress: 0.97
-                },
-                {
-                    label: 'D5',
-                    startDate: '2019-08-01',
-                    endDate: '2019-08-30',
-                    progress: 0.9
-                },
-                {
-                    label: 'D6',
-                    startDate: '2019-09-01',
-                    endDate: '2019-09-30',
-                    progress: 0.02
-                }
-            ]
+      var config = {
+        id: "gantt",
+        height: 400,
+        width: 700,
+        showTimeAxis: true,
+        margin: {
+          right: 100,
+        },
+        markers: [
+          { date: "2019-01-01", label: "new year´s day", color: "green" },
+          { date: "2020-01-01", label: "new year´s day", color: "red" },
+        ],
+        data: [
+          {
+            label: "D1",
+            startDate: "2019-03-17",
+            endDate: "2019-05-15",
+            overrun: true,
+            overrunDate: "2019-05-28",
+            progress: 1.0,
+          },
+          {
+            label: "D1.5",
+            startDate: "2019-05-16",
+            endDate: "2019-05-30",
+            overrun: true,
+            overrunDate: "2019-05-31",
+            progress: 1.0,
+          },
+          {
+            label: "D2",
+            startDate: "2019-05-28",
+            endDate: "2019-07-02",
+            overrun: true,
+            overrunDate: "2019-07-24",
+            progress: 1.0,
+          },
+          {
+            label: "D3",
+            startDate: "2019-07-03",
+            endDate: "2019-07-14",
+            overrun: true,
+            overrunDate: "2019-07-17",
+            progress: 1.0,
+          },
+          {
+            label: "D4",
+            startDate: "2019-07-03",
+            endDate: "2019-07-30",
+            overrun: true,
+            progress: 0.97,
+          },
+          {
+            label: "D5",
+            startDate: "2019-08-01",
+            endDate: "2019-08-30",
+            progress: 0.9,
+          },
+          {
+            label: "D6",
+            startDate: "2019-09-01",
+            endDate: "2019-09-30",
+            progress: 0.02,
+          },
+        ],
+      };
+      var textarea = document.getElementById("config");
+      textarea.value = JSON.stringify(config, null, "  ");
+      autosize(textarea);
 
+      var error = document.getElementById("error");
+
+      var gantt = progressGantt(config);
+      gantt.draw();
+
+      textarea.oninput = function () {
+        try {
+          error.innerHTML = "";
+          editConfig = JSON.parse(textarea.value);
+          gantt.draw(editConfig);
+        } catch (e) {
+          console.log(e);
+          error.innerHTML = e;
         }
-        var textarea = document.getElementById('config');
-        textarea.value = JSON.stringify(config, null, '  ');
-        autosize(textarea);
-
-        var error = document.getElementById('error');
-
-        var gantt = progressGantt(config);
-        gantt.draw();
-
-        textarea.oninput = function () {
-            try {
-                error.innerHTML = '';
-                editConfig = JSON.parse(textarea.value);
-                gantt.draw(editConfig);
-            } catch (e) {
-                console.log(e);
-                error.innerHTML = e;
-            }
-        }
+      };
     </script>
-</body>
-
+  </body>
 </html>

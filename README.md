@@ -22,19 +22,19 @@ Draw a progress gantt.
 
 Play with the settings of the progress-gantt by visiting the [progress-gantt playground][8].
 
-Install in your Node project with 
+Install in your Node project with
 
 <pre>
 npm i progress-gantt
 </pre>
 
-and use it inside your code via 
+and use it inside your code via
 
 <pre>
 const progressGantt = require('progress-gantt');
 </pre>
 
-or, alternatively 
+or, alternatively
 
 <pre>
 import progressGantt from 'progress-gantt';
@@ -48,17 +48,17 @@ let diagram = progressGantt(settings);
 
 ### Parameters
 
--   `settings` **[Object][9]** The configuration object for the progress gantt. 
+-   `settings` **[Object][9]** The configuration object for the progress gantt.
     All data for the progress gantt is provided with this object.
     -   `settings.svg` **[Object][9]** The DOM tree element, wich must be an svg tag.
         The progress gantt will be attached to this DOM tree element. Example:<pre>settings.svg = document.getElementById('progressGantt');</pre><code>'progressGantt'</code> is the id of a svg tag.
-    -   `settings.id` **[String][10]?** The id of a domtree svg element, to which the progress gantt will be bound to. 
+    -   `settings.id` **[String][10]?** The id of a domtree svg element, to which the progress gantt will be bound to.
         The id will only be used in case settings.svg is not provided.
     -   `settings.width` **[Number][11]?** Width in pixels for the progress gantt without borders and margins. Default is <code>600</code>.
     -   `settings.height` **[Number][11]?** Height in pixels for the progress gantt without borders and margins. Default is <code>400</code>.
     -   `settings.fontSize` **[Number][11]?** Size in pixels for all labels. Default is <code>16</code>
     -   `settings.fontFamily` **[String][10]?** The font to use for all labels. Default is <code>sans-serif</code>.
-    -   `settings.margin` **{top: [Number][11], right: [Number][11], bottom: [Number][11], left: [Number][11]}?** The margin for the progress gantt. 
+    -   `settings.margin` **{top: [Number][11], right: [Number][11], bottom: [Number][11], left: [Number][11]}?** The margin for the progress gantt.
         Default values are:<pre>settings.margin = {
         top: 0,
         right: 0,

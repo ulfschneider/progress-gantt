@@ -4,8 +4,7 @@
   "description": "Draw a svg progress gantt chart",
   "main": "progress-gantt.js",
   "scripts": {
-    "test": "jest && browserify -r ./progress-gantt.js:progress-gantt -r autosize > ./progress-gantt-bundle.js && documentation build progress-gantt.js -f md > README.md",
-    "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "test": "jest && browserify -r ./progress-gantt.js:progress-gantt -r autosize > ./progress-gantt-bundle.js && documentation build progress-gantt.js -f md > README.md"
   },
   "repository": {
     "type": "git",
